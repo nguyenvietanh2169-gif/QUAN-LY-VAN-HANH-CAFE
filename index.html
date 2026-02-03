@@ -3,49 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Giám Sát Cafe</title>
+    <title>Barista Control Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     
     <style>
-        :root { --primary: #6f4e37; --secondary: #28a745; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: auto; }
-        .header { background: var(--primary); color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .input-group { display: flex; gap: 10px; margin-bottom: 25px; }
-        input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--primary); }
-        button { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-add { background: var(--primary); color: white; }
-        .btn-add:hover { background: #5a3e2b; }
-        .order-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
-        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
-        .pending { background: #fff3cd; color: #856404; }
-        .done { background: #d4edda; color: #155724; text-decoration: line-through; opacity: 0.6; }
-        .btn-done { background: var(--secondary); color: white; }
-        .btn-done:hover { background: #218838; }
-        h3 { margin: 0 0 5px 0; color: #333; }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        .bar-header { background: #4e342e; color: white; padding: 15px; border-bottom: 4px solid #d4a373; }
+        .menu-btn { margin-bottom: 10px; width: 100%; text-align: left; padding: 15px; font-weight: bold; border-radius: 10px; }
+        .order-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; border-left: 6px solid #ffc107; }
+        .order-card.done { border-left-color: #28a745; opacity: 0.6; }
+        .time-badge { font-size: 0.8rem; color: #666; }
+        #orderContainer { height: 80vh; overflow-y: auto; padding: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1 style="margin:0; font-size: 24px;">☕ CAFE MONITORING</h1>
-        <p style="margin:5px 0 0 0; opacity: 0.8;">Giám sát vận hành thời gian thực</p>
+<div class="bar-header shadow-sm mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">☕ CAFE OPERATOR</h4>
+        <div id="connection-status" class="badge bg-success">Đang kết nối</div>
     </div>
-
-    <div class="input-group">
-        <input type="text" id="orderInput" placeholder="VD: 2 Cafe Muối - Bàn 04">
-        <button class="btn-add" onclick="createOrder()">GỬI ĐƠN</button>
-    </div>
-
-    <div id="orderContainer">
-        </div>
 </div>
 
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4 border-end">
+            <h5 class="mb-3">Menu Nhanh</h5>
+            <div class="row">
+                <div class="col-6"><button class="btn btn-outline-dark menu-btn" onclick="quickAdd('Cafe Đen')">☕ Cafe Đen</button></div>
+                <div class="col-6"><button class="btn btn-outline-dark menu-btn" onclick="quickAdd('Cafe Sữa')">🥤 Cafe Sữa</button></div>
+                <div class="col-6"><button class="btn btn-outline-dark menu-btn" onclick="quickAdd('Bạc Xỉu')">🥛 Bạc Xỉu</button></div>
+                <div class="col-6"><button class="btn btn-outline-dark menu-btn" onclick="quickAdd('Trà Đào')">🍑 Trà Đào</button></div>
+            </div>
+            <hr>
+            <input type="text" id="customInput" class="form-control mb-2" placeholder="Món khác hoặc ghi chú...">
+            <button class="btn btn-primary w-100" onclick="createOrder()">XÁC NHẬN ĐƠN</button>
+        </div>
+
+        <div class="col-md-8">
+            <h5 class="mb-3 d-flex justify-content-between">
+                Đơn hàng hiện tại 
+                <span id="orderCount" class="badge bg-danger">0</span>
+            </h5>
+            <div id="orderContainer">
+                </div>
+        </div>
+    </div>
+</div>
+
+<audio id="notifSound">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+</audio>
+
 <script>
-    // Cấu hình Firebase của bạn
+    // DÁN CONFIG CỦA BẠN VÀO ĐÂY
     const firebaseConfig = {
         apiKey: "AIzaSyB-rTmNSqnZ18y15esxbBQko-Gf0TqqmVQ",
         authDomain: "quan-ly-van-hanh.firebaseapp.com",
@@ -57,58 +70,70 @@
         measurementId: "G-R1ZC0MC2W4"
     };
 
-    // Khởi tạo Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. Hàm tạo đơn hàng mới gửi lên Firebase
+    function quickAdd(item) {
+        document.getElementById('customInput').value = item;
+    }
+
     function createOrder() {
-        const name = document.getElementById('orderInput').value;
-        if (!name) return alert("Vui lòng nhập tên món và số bàn!");
-        
+        const name = document.getElementById('customInput').value;
+        if (!name) return;
         db.ref('orders').push({
             name: name,
             status: 'pending',
             timestamp: Date.now()
         });
-        document.getElementById('orderInput').value = ''; // Xóa ô nhập sau khi gửi
+        document.getElementById('customInput').value = '';
     }
 
-    // 2. Lắng nghe dữ liệu thay đổi từ Firebase (Realtime)
+    // Theo dõi đơn mới để phát âm thanh
+    let firstLoad = true;
+    db.ref('orders').on('child_added', (snapshot) => {
+        if (!firstLoad) {
+            document.getElementById('notifSound').play().catch(e => console.log("Cần tương tác để phát nhạc"));
+        }
+    });
+
+    // Cập nhật giao diện
     db.ref('orders').on('value', (snapshot) => {
+        firstLoad = false;
         const data = snapshot.val();
         const container = document.getElementById('orderContainer');
         container.innerHTML = '';
-        
+        let pendingCount = 0;
+
         if (data) {
-            // Chuyển object dữ liệu thành mảng và sắp xếp đơn mới nhất lên đầu
             const list = Object.keys(data).map(key => ({ id: key, ...data[key] }))
                          .sort((a, b) => b.timestamp - a.timestamp);
 
             list.forEach(order => {
+                if(order.status === 'pending') pendingCount++;
+                
+                const waitTime = Math.floor((Date.now() - order.timestamp) / 60000);
                 const card = document.createElement('div');
-                card.className = 'order-card';
+                card.className = `card order-card ${order.status === 'done' ? 'done' : ''}`;
                 card.innerHTML = `
-                    <div>
-                        <h3>${order.name}</h3>
-                        <span class="status-badge ${order.status}">
-                            ${order.status === 'pending' ? '⏳ Đang chuẩn bị...' : '✅ Đã hoàn thành'}
-                        </span>
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">${order.name}</h5>
+                            <small class="time-badge">${waitTime} phút trước</small>
+                        </div>
+                        ${order.status === 'pending' 
+                            ? `<button class="btn btn-success" onclick="markDone('${order.id}')">HOÀN TẤT</button>` 
+                            : `<span class="text-success fw-bold">✓ XONG</span>`}
                     </div>
-                    ${order.status === 'pending' ? `<button class="btn-done" onclick="markDone('${order.id}')">XONG</button>` : ''}
                 `;
                 container.appendChild(card);
             });
-        } else {
-            container.innerHTML = '<p style="text-align:center; color:#999;">Chưa có đơn hàng nào.</p>';
         }
+        document.getElementById('orderCount').innerText = pendingCount;
     });
 
-    // 3. Hàm cập nhật trạng thái đơn hàng khi bấm nút "XONG"
     function markDone(id) {
         db.ref('orders/' + id).update({ status: 'done' });
     }
 </script>
-
 </body>
 </html>
