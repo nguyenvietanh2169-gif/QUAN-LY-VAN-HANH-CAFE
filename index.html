@@ -3,51 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barista Control Center</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Cafe Modern Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-        .bar-header { background: #4e342e; color: white; padding: 15px; border-bottom: 4px solid #d4a373; }
-        .menu-btn { margin-bottom: 10px; width: 100%; text-align: left; padding: 15px; font-weight: bold; border-radius: 10px; }
-        .order-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; border-left: 6px solid #ffc107; }
-        .order-card.done { border-left-color: #28a745; opacity: 0.6; }
-        .time-badge { font-size: 0.8rem; color: #666; }
-        #orderContainer { height: 80vh; overflow-y: auto; padding: 10px; }
+        body {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .order-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .order-item:hover { transform: translateY(-2px); }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
-<div class="bar-header shadow-sm mb-4">
-    <div class="container d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">☕ CAFE OPERATOR</h4>
-        <div id="connection-status" class="badge bg-success">Đang kết nối</div>
-    </div>
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-4 border-end">
-            <h5 class="mb-3">Menu Nhanh</h5>
-            <div class="row">
-                <div class="col-6"><button class="btn btn-outline-dark menu-btn" onclick="quickAdd('Cafe Đen')">☕ Cafe Đen</button></div>
-                <div class="col-6"><button class="btn btn-outline-dark menu-btn" onclick="quickAdd('Cafe Sữa')">🥤 Cafe Sữa</button></div>
-                <div class="col-6"><button class="btn btn-outline-dark menu-btn" onclick="quickAdd('Bạc Xỉu')">🥛 Bạc Xỉu</button></div>
-                <div class="col-6"><button class="btn btn-outline-dark menu-btn" onclick="quickAdd('Trà Đào')">🍑 Trà Đào</button></div>
+<div class="max-w-6xl mx-auto">
+    <div class="glass rounded-3xl p-6 mb-8 flex flex-col md:flex-row justify-between items-center shadow-xl">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-800">☕ Barista Pro</h1>
+            <p class="text-gray-600 font-medium">Theo dõi vận hành theo thời gian thực</p>
+        </div>
+        <div id="stats" class="mt-4 md:mt-0 flex gap-4">
+            <div class="bg-orange-500 text-white px-4 py-2 rounded-2xl shadow-lg">
+                <span class="text-xs uppercase font-bold">Chờ</span>
+                <p id="pendingCount" class="text-2xl font-black">0</p>
             </div>
-            <hr>
-            <input type="text" id="customInput" class="form-control mb-2" placeholder="Món khác hoặc ghi chú...">
-            <button class="btn btn-primary w-100" onclick="createOrder()">XÁC NHẬN ĐƠN</button>
+            <div class="bg-green-500 text-white px-4 py-2 rounded-2xl shadow-lg">
+                <span class="text-xs uppercase font-bold">Đã Xong</span>
+                <p id="doneCount" class="text-2xl font-black">0</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-1">
+            <div class="glass rounded-3xl p-6 shadow-xl sticky top-8">
+                <h2 class="text-xl font-bold mb-4 text-gray-700">Tạo Đơn Mới</h2>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <button onclick="quickAdd('Cafe Sữa')" class="p-3 bg-white hover:bg-orange-100 rounded-xl font-bold text-gray-700 transition shadow-sm">Cafe Sữa</button>
+                    <button onclick="quickAdd('Bạc Xỉu')" class="p-3 bg-white hover:bg-orange-100 rounded-xl font-bold text-gray-700 transition shadow-sm">Bạc Xỉu</button>
+                    <button onclick="quickAdd('Trà Đào')" class="p-3 bg-white hover:bg-orange-100 rounded-xl font-bold text-gray-700 transition shadow-sm">Trà Đào</button>
+                    <button onclick="quickAdd('Americano')" class="p-3 bg-white hover:bg-orange-100 rounded-xl font-bold text-gray-700 transition shadow-sm">Americano</button>
+                </div>
+                <input type="text" id="orderInput" placeholder="Tên món & Ghi chú..." 
+                       class="w-full p-4 rounded-2xl border-none focus:ring-2 focus:ring-orange-400 shadow-inner mb-4">
+                <button onclick="createOrder()" 
+                        class="w-full py-4 bg-gray-800 text-white rounded-2xl font-bold text-lg hover:bg-black transition shadow-lg active:scale-95">
+                    GỬI ĐƠN XUỐNG BẾP
+                </button>
+            </div>
         </div>
 
-        <div class="col-md-8">
-            <h5 class="mb-3 d-flex justify-content-between">
-                Đơn hàng hiện tại 
-                <span id="orderCount" class="badge bg-danger">0</span>
-            </h5>
-            <div id="orderContainer">
+        <div class="lg:col-span-2">
+            <div id="orderContainer" class="space-y-4">
                 </div>
         </div>
     </div>
@@ -58,7 +74,7 @@
 </audio>
 
 <script>
-    // DÁN CONFIG CỦA BẠN VÀO ĐÂY
+    // GIỮ NGUYÊN FIREBASE CONFIG CỦA BẠN Ở ĐÂY
     const firebaseConfig = {
         apiKey: "AIzaSyB-rTmNSqnZ18y15esxbBQko-Gf0TqqmVQ",
         authDomain: "quan-ly-van-hanh.firebaseapp.com",
@@ -74,61 +90,68 @@
     const db = firebase.database();
 
     function quickAdd(item) {
-        document.getElementById('customInput').value = item;
+        document.getElementById('orderInput').value = item;
     }
 
     function createOrder() {
-        const name = document.getElementById('customInput').value;
-        if (!name) return;
+        const val = document.getElementById('orderInput').value;
+        if (!val) return;
         db.ref('orders').push({
-            name: name,
+            name: val,
             status: 'pending',
             timestamp: Date.now()
         });
-        document.getElementById('customInput').value = '';
+        document.getElementById('orderInput').value = '';
     }
 
-    // Theo dõi đơn mới để phát âm thanh
-    let firstLoad = true;
-    db.ref('orders').on('child_added', (snapshot) => {
-        if (!firstLoad) {
-            document.getElementById('notifSound').play().catch(e => console.log("Cần tương tác để phát nhạc"));
-        }
+    let isFirstLoad = true;
+    db.ref('orders').limitToLast(1).on('child_added', () => {
+        if (!isFirstLoad) document.getElementById('notifSound').play().catch(()=>{});
     });
 
-    // Cập nhật giao diện
     db.ref('orders').on('value', (snapshot) => {
-        firstLoad = false;
+        isFirstLoad = false;
         const data = snapshot.val();
         const container = document.getElementById('orderContainer');
         container.innerHTML = '';
-        let pendingCount = 0;
+        
+        let pCount = 0; let dCount = 0;
 
         if (data) {
             const list = Object.keys(data).map(key => ({ id: key, ...data[key] }))
                          .sort((a, b) => b.timestamp - a.timestamp);
 
             list.forEach(order => {
-                if(order.status === 'pending') pendingCount++;
+                const isPending = order.status === 'pending';
+                isPending ? pCount++ : dCount++;
                 
-                const waitTime = Math.floor((Date.now() - order.timestamp) / 60000);
                 const card = document.createElement('div');
-                card.className = `card order-card ${order.status === 'done' ? 'done' : ''}`;
+                card.className = `order-item glass rounded-3xl p-6 flex justify-between items-center shadow-sm ${!isPending ? 'opacity-50 grayscale' : ''}`;
+                
+                const timeAgo = Math.floor((Date.now() - order.timestamp) / 60000);
+
                 card.innerHTML = `
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-0">${order.name}</h5>
-                            <small class="time-badge">${waitTime} phút trước</small>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 ${isPending ? 'bg-orange-500' : 'bg-gray-400'} rounded-2xl flex items-center justify-center text-white text-xl">
+                            ${isPending ? '⏳' : '✅'}
                         </div>
-                        ${order.status === 'pending' 
-                            ? `<button class="btn btn-success" onclick="markDone('${order.id}')">HOÀN TẤT</button>` 
-                            : `<span class="text-success fw-bold">✓ XONG</span>`}
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">${order.name}</h3>
+                            <p class="text-sm text-gray-500 font-medium">${timeAgo} phút trước</p>
+                        </div>
                     </div>
+                    ${isPending ? `
+                        <button onclick="markDone('${order.id}')" 
+                                class="bg-white hover:bg-green-500 hover:text-white text-green-600 border-2 border-green-500 px-6 py-2 rounded-xl font-bold transition-all">
+                            Xong
+                        </button>
+                    ` : '<span class="text-green-600 font-bold">Hoàn tất</span>'}
                 `;
                 container.appendChild(card);
             });
         }
-        document.getElementById('orderCount').innerText = pendingCount;
+        document.getElementById('pendingCount').innerText = pCount;
+        document.getElementById('doneCount').innerText = dCount;
     });
 
     function markDone(id) {
