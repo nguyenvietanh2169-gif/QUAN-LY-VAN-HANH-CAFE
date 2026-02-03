@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Giám Sát Cafe</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        :root { --primary: #6f4e37; --secondary: #28a745; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        .header { background: var(--primary); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-add { background: var(--primary); color: white; }
+        .order-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.3s; }
+        .status-badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; }
+        .pending { background: #fff3cd; color: #856404; }
+        .done { background: #d4edda; color: #155724; text-decoration: line-through; opacity: 0.7; }
+        .btn-done { background: var(--secondary); color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>☕ QUẢN LÝ VẬN HÀNH</h2>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="orderInput" placeholder="Nhập tên món & số bàn...">
+        <button class="btn-add" onclick="createOrder()">GỬI ĐƠN</button>
+    </div>
+
+    <div id="orderContainer">
+        </div>
+</div>
+
+<script>
+    // --- COPY VÀ THAY THẾ CONFIG CỦA BẠN VÀO ĐÂY ---
+    const firebaseConfig = {
+  apiKey: "AIzaSyB-rTmNSqnZ18y15esxbBQko-Gf0TqqmVQ",
+  authDomain: "quan-ly-van-hanh.firebaseapp.com",
+  databaseURL: "https://quan-ly-van-hanh-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "quan-ly-van-hanh",
+  storageBucket: "quan-ly-van-hanh.firebasestorage.app",
+  messagingSenderId: "983773797210",
+  appId: "1:983773797210:web:155c433149e20c633e3163",
+  measurementId: "G-R1ZC0MC2W4"
+};
+    // ----------------------------------------------
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 1. Hàm tạo đơn hàng mới lên Firebase
+    function createOrder() {
+        const name = document.getElementById('orderInput').value;
+        if (!name) return alert("Vui lòng nhập món!");
+        
+        db.ref('orders').push({
+            name: name,
+            status: 'pending',
+            timestamp: Date.now()
+        });
+        document.getElementById('orderInput').value = '';
+    }
+
+    // 2. Lắng nghe dữ liệu thay đổi (Realtime)
+    db.ref('orders').on('value', (snapshot) => {
+        const data = snapshot.val();
+        const container = document.getElementById('orderContainer');
+        container.innerHTML = '';
+        
+        if (data) {
+            // Chuyển object thành array và sắp xếp đơn mới nhất lên đầu
+            const list = Object.keys(data).map(key => ({ id: key, ...data[key] }))
+                         .sort((a, b) => b.timestamp - a.timestamp);
+
+            list.forEach(order => {
+                const card = document.createElement('div');
+                card.className = 'order-card';
+                card.innerHTML = `
+                    <div>
+                        <strong>${order.name}</strong><br>
+                        <span class="status-badge ${order.status}">${order.status === 'pending' ? '⏳ Đang chờ' : '✅ Hoàn thành'}</span>
+                    </div>
+                    ${order.status === 'pending' ? `<button class="btn-done" onclick="markDone('${order.id}')">Xong</button>` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+    });
+
+    // 3. Hàm cập nhật trạng thái đơn hàng
+    function markDone(id) {
+        db.ref('orders/' + id).update({ status: 'done' });
+    }
+</script>
+
+</body>
+</html>
