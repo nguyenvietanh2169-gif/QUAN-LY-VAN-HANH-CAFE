@@ -6,31 +6,37 @@
     <title>Hệ Thống Giám Sát Cafe</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    
     <style>
-        :root { --primary: #6f4e37; --secondary: #28a745; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        :root { --primary: #6f4e37; --secondary: #28a745; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: auto; }
-        .header { background: var(--primary); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
-        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .header { background: var(--primary); color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .input-group { display: flex; gap: 10px; margin-bottom: 25px; }
+        input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); }
+        button { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-add { background: var(--primary); color: white; }
-        .order-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.3s; }
-        .status-badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; }
+        .btn-add:hover { background: #5a3e2b; }
+        .order-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
         .pending { background: #fff3cd; color: #856404; }
-        .done { background: #d4edda; color: #155724; text-decoration: line-through; opacity: 0.7; }
+        .done { background: #d4edda; color: #155724; text-decoration: line-through; opacity: 0.6; }
         .btn-done { background: var(--secondary); color: white; }
+        .btn-done:hover { background: #218838; }
+        h3 { margin: 0 0 5px 0; color: #333; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h2>☕ QUẢN LÝ VẬN HÀNH</h2>
+        <h1 style="margin:0; font-size: 24px;">☕ CAFE MONITORING</h1>
+        <p style="margin:5px 0 0 0; opacity: 0.8;">Giám sát vận hành thời gian thực</p>
     </div>
 
     <div class="input-group">
-        <input type="text" id="orderInput" placeholder="Nhập tên món & số bàn...">
+        <input type="text" id="orderInput" placeholder="VD: 2 Cafe Muối - Bàn 04">
         <button class="btn-add" onclick="createOrder()">GỬI ĐƠN</button>
     </div>
 
@@ -39,43 +45,43 @@
 </div>
 
 <script>
-    // --- COPY VÀ THAY THẾ CONFIG CỦA BẠN VÀO ĐÂY ---
+    // Cấu hình Firebase của bạn
     const firebaseConfig = {
-  apiKey: "AIzaSyB-rTmNSqnZ18y15esxbBQko-Gf0TqqmVQ",
-  authDomain: "quan-ly-van-hanh.firebaseapp.com",
-  databaseURL: "https://quan-ly-van-hanh-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "quan-ly-van-hanh",
-  storageBucket: "quan-ly-van-hanh.firebasestorage.app",
-  messagingSenderId: "983773797210",
-  appId: "1:983773797210:web:155c433149e20c633e3163",
-  measurementId: "G-R1ZC0MC2W4"
-};
-    // ----------------------------------------------
+        apiKey: "AIzaSyB-rTmNSqnZ18y15esxbBQko-Gf0TqqmVQ",
+        authDomain: "quan-ly-van-hanh.firebaseapp.com",
+        databaseURL: "https://quan-ly-van-hanh-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "quan-ly-van-hanh",
+        storageBucket: "quan-ly-van-hanh.firebasestorage.app",
+        messagingSenderId: "983773797210",
+        appId: "1:983773797210:web:155c433149e20c633e3163",
+        measurementId: "G-R1ZC0MC2W4"
+    };
 
+    // Khởi tạo Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. Hàm tạo đơn hàng mới lên Firebase
+    // 1. Hàm tạo đơn hàng mới gửi lên Firebase
     function createOrder() {
         const name = document.getElementById('orderInput').value;
-        if (!name) return alert("Vui lòng nhập món!");
+        if (!name) return alert("Vui lòng nhập tên món và số bàn!");
         
         db.ref('orders').push({
             name: name,
             status: 'pending',
             timestamp: Date.now()
         });
-        document.getElementById('orderInput').value = '';
+        document.getElementById('orderInput').value = ''; // Xóa ô nhập sau khi gửi
     }
 
-    // 2. Lắng nghe dữ liệu thay đổi (Realtime)
+    // 2. Lắng nghe dữ liệu thay đổi từ Firebase (Realtime)
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
         const container = document.getElementById('orderContainer');
         container.innerHTML = '';
         
         if (data) {
-            // Chuyển object thành array và sắp xếp đơn mới nhất lên đầu
+            // Chuyển object dữ liệu thành mảng và sắp xếp đơn mới nhất lên đầu
             const list = Object.keys(data).map(key => ({ id: key, ...data[key] }))
                          .sort((a, b) => b.timestamp - a.timestamp);
 
@@ -84,17 +90,21 @@
                 card.className = 'order-card';
                 card.innerHTML = `
                     <div>
-                        <strong>${order.name}</strong><br>
-                        <span class="status-badge ${order.status}">${order.status === 'pending' ? '⏳ Đang chờ' : '✅ Hoàn thành'}</span>
+                        <h3>${order.name}</h3>
+                        <span class="status-badge ${order.status}">
+                            ${order.status === 'pending' ? '⏳ Đang chuẩn bị...' : '✅ Đã hoàn thành'}
+                        </span>
                     </div>
-                    ${order.status === 'pending' ? `<button class="btn-done" onclick="markDone('${order.id}')">Xong</button>` : ''}
+                    ${order.status === 'pending' ? `<button class="btn-done" onclick="markDone('${order.id}')">XONG</button>` : ''}
                 `;
                 container.appendChild(card);
             });
+        } else {
+            container.innerHTML = '<p style="text-align:center; color:#999;">Chưa có đơn hàng nào.</p>';
         }
     });
 
-    // 3. Hàm cập nhật trạng thái đơn hàng
+    // 3. Hàm cập nhật trạng thái đơn hàng khi bấm nút "XONG"
     function markDone(id) {
         db.ref('orders/' + id).update({ status: 'done' });
     }
