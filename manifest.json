@@ -1,15 +1,16 @@
 {
-  "name": "Smart Cafe Pro",
+  "name": "Smart Cafe POS Pro",
   "short_name": "CafePro",
-  "start_url": "index.html",
+  "start_url": ".",
   "display": "standalone",
-  "background_color": "#4f46e5",
+  "background_color": "#ffffff",
   "theme_color": "#4f46e5",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/924/924514.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
