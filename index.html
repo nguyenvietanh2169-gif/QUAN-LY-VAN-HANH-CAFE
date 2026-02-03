@@ -6,6 +6,7 @@
     <title>Smart Cafe POS Pro</title>
     
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/924/924514.png">
@@ -17,23 +18,23 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fdfdfd; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fdfdfd; -webkit-tap-highlight-color: transparent; }
         .tab-content { display: none; }
         .active-tab { display: block; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-top: 1px solid rgba(0,0,0,0.05); }
-        .nav-active { color: #4f46e5 !important; transform: scale(1.1); }
+        .nav-active { color: #4f46e5 !important; transform: scale(1.1); transition: all 0.2s; }
     </style>
 </head>
 <body class="pb-24 text-gray-900">
 
-<header class="bg-white/70 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b border-gray-100">
+<header class="bg-white/70 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex justify-between items-center border-b border-gray-100">
     <div>
         <h1 class="text-xl font-extrabold text-indigo-600 tracking-tight">SMART CAFE <span class="text-gray-400 font-normal">| HUB</span></h1>
     </div>
-    <div class="flex items-center gap-2">
-        <div id="statusDot" class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <span id="headerTime" class="text-xs font-bold text-gray-500">00:00</span>
+    <div class="flex items-center gap-2 text-right">
+        <span id="headerTime" class="text-xs font-bold text-gray-500 block">00:00</span>
+        <div id="statusDot" class="w-2 h-2 bg-green-500 rounded-full animate-pulse ml-auto"></div>
     </div>
 </header>
 
@@ -51,9 +52,9 @@
             </div>
         </div>
         <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-            <div class="flex justify-between items-center mb-4">
-                <h4 class="font-extrabold">Lưu lượng đơn</h4>
-                <button onclick="clearSystem()" class="text-[10px] bg-red-50 text-red-500 font-bold px-3 py-1 rounded-full uppercase">Dọn dẹp</button>
+            <div class="flex justify-between items-center mb-4 text-xs font-bold uppercase text-gray-400">
+                <h4>Biểu đồ lưu lượng</h4>
+                <button onclick="clearSystem()" class="bg-red-50 text-red-500 px-3 py-1 rounded-full uppercase">Dọn dẹp đơn cũ</button>
             </div>
             <canvas id="mainChart" height="180"></canvas>
         </div>
@@ -62,51 +63,49 @@
     <div id="pos" class="tab-content active-tab">
         <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100 mb-6">
             <h4 class="font-extrabold mb-4 text-gray-700">Menu Nhanh</h4>
-            <div id="menuGrid" class="grid grid-cols-3 gap-3 mb-4">
-                </div>
+            <div id="menuGrid" class="grid grid-cols-3 gap-3 mb-4"></div>
             <div class="flex gap-2">
-                <input type="text" id="customOrder" placeholder="Món khác / Ghi chú..." 
-                       class="flex-1 bg-gray-50 p-4 rounded-2xl border-none focus:ring-2 focus:ring-indigo-400 transition-all">
+                <input type="text" id="customOrder" placeholder="Ghi chú thêm..." 
+                       class="flex-1 bg-gray-50 p-4 rounded-2xl border-none focus:ring-2 focus:ring-indigo-400 transition-all outline-none">
                 <button onclick="sendOrder()" class="bg-indigo-600 text-white px-8 rounded-2xl font-black active:scale-95 transition-all">GỬI</button>
             </div>
         </div>
-        <div id="liveOrders" class="space-y-3">
-            </div>
+        <div id="liveOrders" class="space-y-3"></div>
     </div>
 
     <div id="staff" class="tab-content">
         <div class="bg-white p-6 rounded-[2rem] shadow-sm mb-4 border border-gray-100">
-            <h4 class="font-extrabold mb-4">Nhân viên Check-in</h4>
+            <h4 class="font-extrabold mb-4">Điểm danh nhân viên</h4>
             <div class="grid grid-cols-2 gap-3">
                 <button onclick="logStaff('VÀO CA')" class="py-4 bg-green-50 text-green-700 font-bold rounded-2xl hover:bg-green-100 transition">VÀO CA</button>
                 <button onclick="logStaff('TAN CA')" class="py-4 bg-red-50 text-red-700 font-bold rounded-2xl hover:bg-red-100 transition">TAN CA</button>
             </div>
         </div>
         <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
-            <h4 class="font-extrabold mb-4">Gửi thông tin cho Sếp</h4>
-            <textarea id="staffMsg" class="w-full bg-gray-50 p-4 rounded-2xl border-none h-32 mb-4" placeholder="Nội dung ý kiến hoặc đơn xin nghỉ..."></textarea>
-            <button onclick="sendMsg()" class="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold">GỬI NGAY</button>
+            <h4 class="font-extrabold mb-4">Gửi tin cho sếp</h4>
+            <textarea id="staffMsg" class="w-full bg-gray-50 p-4 rounded-2xl border-none h-32 mb-4 outline-none" placeholder="Xin nghỉ, góp ý..."></textarea>
+            <button onclick="sendMsg()" class="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold active:scale-95 transition">GỬI NGAY</button>
         </div>
     </div>
 
 </main>
 
-<footer class="fixed bottom-0 left-0 right-0 glass px-8 py-4 flex justify-between items-center shadow-2xl rounded-t-[2.5rem]">
-    <button onclick="tab('admin', this)" class="flex flex-col items-center gap-1 text-gray-400 transition-all">
-        <span class="text-xl">📈</span><span class="text-[9px] font-black uppercase">Admin</span>
+<footer class="fixed bottom-0 left-0 right-0 glass px-8 py-4 flex justify-between items-center shadow-2xl rounded-t-[2.5rem] z-50">
+    <button onclick="tab('admin', this)" class="flex flex-col items-center gap-1 text-gray-400">
+        <span class="text-xl">📊</span><span class="text-[9px] font-black uppercase tracking-wider">Admin</span>
     </button>
-    <button onclick="tab('pos', this)" class="flex flex-col items-center gap-1 nav-active transition-all">
-        <span class="text-xl">☕</span><span class="text-[9px] font-black uppercase">Bán hàng</span>
+    <button onclick="tab('pos', this)" class="flex flex-col items-center gap-1 nav-active">
+        <span class="text-xl">☕</span><span class="text-[9px] font-black uppercase tracking-wider">Bán hàng</span>
     </button>
-    <button onclick="tab('staff', this)" class="flex flex-col items-center gap-1 text-gray-400 transition-all">
-        <span class="text-xl">👤</span><span class="text-[9px] font-black uppercase">Nhân viên</span>
+    <button onclick="tab('staff', this)" class="flex flex-col items-center gap-1 text-gray-400">
+        <span class="text-xl">👤</span><span class="text-[9px] font-black uppercase tracking-wider">Nhân sự</span>
     </button>
 </footer>
 
 <audio id="dingSound"><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg"></audio>
 
 <script>
-    // --- FIREBASE CONFIG (Dán config của bạn) ---
+    // --- CẤU HÌNH FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyB-rTmNSqnZ18y15esxbBQko-Gf0TqqmVQ",
         authDomain: "quan-ly-van-hanh.firebaseapp.com",
@@ -119,18 +118,42 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // MENU CONFIG
+    // DỮ LIỆU MENU
     const menuItems = [
         {n: 'Cafe Đen', p: 25000}, {n: 'Cafe Sữa', p: 30000}, {n: 'Bạc Xỉu', p: 35000},
         {n: 'Trà Đào', p: 40000}, {n: 'Cam Sả', p: 45000}, {n: 'Matcha', p: 45000}
     ];
 
+    let deferredPrompt;
+
     function init() {
         const grid = document.getElementById('menuGrid');
         menuItems.forEach(i => {
-            grid.innerHTML += `<button onclick="setVal('${i.n}')" class="p-3 bg-white border border-gray-100 rounded-2xl shadow-sm text-[11px] font-bold text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-all">${i.n}<br><span class="opacity-50">${i.p/1000}k</span></button>`;
+            grid.innerHTML += `<button onclick="setVal('${i.n}')" class="p-3 bg-white border border-gray-100 rounded-2xl shadow-sm text-[11px] font-bold text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-all active:scale-95">${i.n}<br><span class="opacity-50 font-normal">${i.p/1000}k</span></button>`;
         });
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+        // Đăng ký Service Worker cho PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
+        }
+
+        // Lắng nghe sự kiện cài đặt (Chỉ Android/Chrome)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallBanner();
+        });
+    }
+
+    function showInstallBanner() {
+        const btn = document.createElement('button');
+        btn.innerHTML = "📲 CÀI ĐẶT APP NGAY";
+        btn.className = "fixed top-20 left-1/2 -translate-x-1/2 bg-yellow-400 text-black px-6 py-2 rounded-full font-bold shadow-2xl z-[100] animate-bounce text-xs";
+        document.body.appendChild(btn);
+        btn.onclick = () => {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(() => btn.remove());
+        };
     }
 
     function tab(id, btn) {
@@ -150,7 +173,7 @@
         document.getElementById('customOrder').value = '';
     }
 
-    // REALTIME CORE
+    // XỬ LÝ DỮ LIỆU REALTIME
     let firstLoad = true;
     db.ref('orders').on('value', snap => {
         const data = snap.val();
@@ -167,7 +190,7 @@
                     list.innerHTML += `
                     <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-50 flex justify-between items-center">
                         <div><h5 class="font-bold text-gray-800">${o.name}</h5><p class="text-[10px] text-gray-400 font-bold uppercase">${time} phút trước</p></div>
-                        <button onclick="mark('${key}')" class="bg-indigo-50 text-indigo-600 px-6 py-2 rounded-xl font-extrabold hover:bg-indigo-600 hover:text-white transition-all">XONG</button>
+                        <button onclick="markDone('${key}')" class="bg-indigo-50 text-indigo-600 px-6 py-2 rounded-xl font-extrabold hover:bg-indigo-600 hover:text-white transition-all">XONG</button>
                     </div>`;
                 }
             });
@@ -178,10 +201,10 @@
         firstLoad = false;
     });
 
-    function mark(id) { db.ref('orders/' + id).update({ status: 'done' }); }
+    function markDone(id) { db.ref('orders/' + id).update({ status: 'done' }); }
 
     function clearSystem() {
-        if(confirm("Xóa các đơn đã xong?")) {
+        if(confirm("Dọn dẹp các đơn đã hoàn thành?")) {
             db.ref('orders').once('value', snap => {
                 const data = snap.val();
                 for(let id in data) if(data[id].status === 'done') db.ref('orders/' + id).remove();
@@ -191,26 +214,29 @@
 
     function logStaff(type) {
         const name = prompt("Tên nhân viên:");
-        if(name) db.ref('attendance').push({ name, type, t: new Date().toLocaleString() });
+        if(name) db.ref('attendance').push({ name, type, t: new Date().toLocaleString('vi-VN') });
     }
 
     function sendMsg() {
         const msg = document.getElementById('staffMsg').value;
         if(msg) {
-            db.ref('messages').push({ msg, t: new Date().toLocaleString() });
-            alert("Đã gửi!"); document.getElementById('staffMsg').value = '';
+            db.ref('messages').push({ msg, t: new Date().toLocaleString('vi-VN') });
+            alert("Đã gửi đến sếp!"); document.getElementById('staffMsg').value = '';
         }
     }
 
-    // Chart
+    // BIỂU ĐỒ DOANH THU (CHART.JS)
     const ctx = document.getElementById('mainChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
-        data: { labels: ['6h','10h','14h','18h','22h'], datasets: [{ label: 'Đơn hàng', data: [2, 15, 8, 22, 5], borderColor: '#4f46e5', tension: 0.4, fill: true, backgroundColor: 'rgba(79, 70, 229, 0.05)' }] },
+        data: { labels: ['Sáng','Trưa','Chiều','Tối'], datasets: [{ label: 'Đơn hàng', data: [5, 18, 12, 25], borderColor: '#4f46e5', tension: 0.4, fill: true, backgroundColor: 'rgba(79, 70, 229, 0.05)' }] },
         options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
     });
 
-    setInterval(() => { document.getElementById('headerTime').innerText = new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}); }, 1000);
+    setInterval(() => { 
+        document.getElementById('headerTime').innerText = new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}); 
+    }, 1000);
+
     init();
 </script>
 </body>
