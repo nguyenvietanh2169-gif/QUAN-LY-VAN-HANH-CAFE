@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Cafe POS & HRM Pro</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Smart Cafe ERP Pro</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -16,133 +12,101 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; color: #1e293b; }
         .tab-content { display: none; }
-        .active-tab { display: block; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-active { color: #4f46e5 !important; }
-        .glass-nav { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.05); }
-        #camera-overlay { display: none; position: fixed; inset: 0; background: black; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
-        video { width: 85%; max-width: 400px; border-radius: 2rem; border: 4px solid white; transform: scaleX(-1); }
+        .active-tab { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-active { color: #4f46e5; border-bottom: 3px solid #4f46e5; padding-bottom: 5px; }
+        .critical-stock { animation: pulse 1.5s infinite; background: #fef2f2; border: 1px solid #fee2e2; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="pb-32">
 
-<div id="camera-overlay">
-    <video id="webcam" autoplay playsinline></video>
-    <canvas id="photoCanvas" class="hidden"></canvas>
-    <div class="mt-8 flex gap-6">
-        <button onclick="capturePhoto()" class="bg-white p-5 rounded-full shadow-2xl active:scale-90 transition"><i data-lucide="camera" class="text-black"></i></button>
-        <button onclick="closeCamera()" class="bg-red-500 p-5 rounded-full shadow-2xl active:scale-90 transition"><i data-lucide="x" class="text-white"></i></button>
+<header class="bg-white px-6 py-8 rounded-b-[2.5rem] shadow-sm flex justify-between items-center">
+    <div>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Smart <span class="text-indigo-600">ERP</span></h1>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" id="dateDisplay"></p>
     </div>
-</div>
-
-<header class="px-6 pt-12 pb-6 bg-gradient-to-b from-indigo-50/50 to-transparent">
-    <div class="flex justify-between items-center mb-6">
-        <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-200">
-                <i data-lucide="layout-grid"></i>
-            </div>
-            <div>
-                <h1 class="text-xl font-black tracking-tight text-slate-900">Workspace</h1>
-                <p id="currentDate" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Thứ Tư, 04 Tháng 2</p>
-            </div>
-        </div>
-        <div class="relative bg-white p-2.5 rounded-xl shadow-sm border border-slate-100">
-            <i data-lucide="bell" class="w-5 h-5 text-slate-400"></i>
-            <span id="badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-white font-bold">0</span>
-        </div>
-    </div>
-
-    <div id="alertBox" class="bg-white border border-slate-100 p-4 rounded-2xl flex items-center justify-between shadow-sm hidden">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center"><i data-lucide="shopping-cart" class="w-4 h-4"></i></div>
-            <p class="text-xs font-bold text-slate-600"><span id="pendingNum" class="text-orange-600">0</span> đơn hàng đang chờ pha chế</p>
-        </div>
-        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300"></i>
+    <div class="flex gap-3">
+        <div id="stockWarning" class="hidden w-10 h-10 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center animate-bounce"><i data-lucide="package-search" class="w-5 h-5"></i></div>
+        <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center"><i data-lucide="bell" class="w-5 h-5"></i></div>
     </div>
 </header>
 
-<main class="max-w-xl mx-auto p-4 space-y-6">
+<main class="p-4 max-w-xl mx-auto space-y-6">
 
     <div id="admin" class="tab-content active-tab space-y-6">
         <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Doanh thu</p>
-                <h3 id="revVal" class="text-xl font-black text-indigo-600 mt-1">0đ</h3>
+            <div class="bg-white p-5 rounded-3xl border border-slate-100">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Doanh thu</p>
+                <h3 id="revVal" class="text-xl font-black">0đ</h3>
             </div>
-            <div class="bg-indigo-600 p-5 rounded-[2rem] shadow-xl shadow-indigo-100 text-white">
-                <p class="text-[10px] font-bold opacity-70 uppercase tracking-widest">Lương tạm tính</p>
-                <h3 id="salaryVal" class="text-xl font-black mt-1 text-white">0đ</h3>
+            <div class="bg-indigo-600 p-5 rounded-3xl text-white shadow-lg shadow-indigo-100">
+                <p class="text-[10px] font-bold opacity-60 uppercase">Dự toán lương</p>
+                <h3 id="payrollVal" class="text-xl font-black">0đ</h3>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
+        <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-50">
             <div class="flex justify-between items-center mb-6">
-                <h4 class="text-sm font-black text-slate-800 uppercase tracking-tighter">Hiệu suất đơn hàng</h4>
-                <div class="flex gap-1"><div class="w-1.5 h-1.5 rounded-full bg-indigo-500"></div><div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div></div>
+                <h4 class="font-black text-xs text-slate-400 uppercase tracking-widest">Tồn kho nguyên liệu</h4>
+                <button onclick="tab('inventory-edit', this)" class="text-indigo-600 text-[10px] font-bold">+ NHẬP KHO</button>
             </div>
-            <canvas id="mainChart" height="200"></canvas>
+            <div id="stockList" class="grid grid-cols-2 gap-3 text-sm"></div>
         </div>
 
-        <div id="staffLogs" class="space-y-3">
-            <h4 class="text-[10px] font-black text-slate-400 uppercase px-2">Nhật ký chấm công mới</h4>
-            <div id="attendanceList" class="space-y-3"></div>
+        <div class="space-y-3">
+            <h4 class="font-black text-xs text-slate-400 uppercase px-2">Nhân viên đang trực</h4>
+            <div id="activeStaffList" class="space-y-3"></div>
         </div>
     </div>
 
     <div id="pos" class="tab-content space-y-4">
-        <div class="bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-white">
-            <div id="menuGrid" class="grid grid-cols-3 gap-2 mb-4"></div>
+        <div class="bg-white p-6 rounded-[2.5rem] shadow-xl border border-white">
+            <div id="menuGrid" class="grid grid-cols-2 gap-2 mb-4"></div>
             <div class="flex gap-2">
-                <input type="text" id="orderNote" placeholder="Ghi chú món / khách..." class="flex-1 bg-slate-50 p-4 rounded-2xl text-sm outline-none border-2 border-transparent focus:border-indigo-100 transition-all font-medium">
-                <button onclick="sendOrder()" class="bg-indigo-600 text-white px-8 rounded-2xl font-black text-sm shadow-lg shadow-indigo-200 active:scale-95 transition">GỬI</button>
+                <input type="text" id="orderInput" placeholder="Ghi chú..." class="flex-1 bg-slate-50 p-4 rounded-2xl text-sm outline-none">
+                <button onclick="addOrder()" class="bg-indigo-600 text-white px-8 rounded-2xl font-black active:scale-95 transition shadow-lg shadow-indigo-100">GỬI</button>
             </div>
         </div>
-        <div id="liveOrders" class="space-y-3 pb-10"></div>
+        <div id="orderList" class="space-y-3 pb-10"></div>
     </div>
 
-    <div id="hrm" class="tab-content space-y-6">
-        <div class="bg-white p-8 rounded-[2.5rem] text-center border border-slate-100 shadow-sm">
-            <div class="w-20 h-20 bg-indigo-50 rounded-[2rem] mx-auto mb-4 flex items-center justify-center text-indigo-600 shadow-inner">
-                <i data-lucide="user-check" class="w-10 h-10"></i>
-            </div>
-            <h3 class="font-black text-lg">Chấm công FaceID</h3>
-            <p class="text-xs text-slate-400 mb-6 font-medium">Hệ thống tự động ghi nhận vị trí & thời gian</p>
-            <input type="text" id="staffName" placeholder="Tên của bạn..." class="w-full bg-slate-50 p-4 rounded-2xl mb-4 text-center text-sm font-bold outline-none border-2 border-transparent focus:border-indigo-500 transition-all">
-            <button onclick="openCamera()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm tracking-widest shadow-xl active:scale-95 transition">VÀO CA NGAY</button>
-        </div>
-        
-        <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100">
-            <h4 class="text-xs font-black text-slate-400 uppercase mb-4">Quy trình làm việc</h4>
+    <div id="inventory-edit" class="tab-content space-y-6">
+        <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <h3 class="text-xl font-black mb-6">Nhập kho nhanh</h3>
             <div class="space-y-4">
-                <div class="flex items-center gap-3"><input type="checkbox" class="w-5 h-5 rounded-lg border-slate-200"><span class="text-sm font-medium">Kiểm tra hạt cafe đầu ca</span></div>
-                <div class="flex items-center gap-3"><input type="checkbox" class="w-5 h-5 rounded-lg border-slate-200"><span class="text-sm font-medium">Vệ sinh máy pha (Espresso)</span></div>
-                <div class="flex items-center gap-3"><input type="checkbox" class="w-5 h-5 rounded-lg border-slate-200"><span class="text-sm font-medium">Chốt két tiền bàn giao</span></div>
+                <select id="stockItem" class="w-full bg-slate-50 p-4 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-indigo-500">
+                    <option value="Hạt Cafe (g)">Hạt Cafe (g)</option>
+                    <option value="Sữa đặc (ml)">Sữa đặc (ml)</option>
+                    <option value="Đường (g)">Đường (g)</option>
+                </select>
+                <input type="number" id="stockQty" placeholder="Số lượng nhập..." class="w-full bg-slate-50 p-4 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-indigo-500">
+                <button onclick="updateStock()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black tracking-widest shadow-xl">CẬP NHẬT KHO</button>
             </div>
         </div>
     </div>
 
 </main>
 
-<footer class="fixed bottom-6 left-6 right-6 h-20 glass-nav shadow-2xl rounded-[2.5rem] flex justify-around items-center px-4 z-[500]">
-    <button onclick="tab('admin', this)" class="nav-active flex flex-col items-center gap-1 flex-1 transition-all">
-        <i data-lucide="home" class="w-6 h-6"></i>
-        <span class="text-[8px] font-black uppercase tracking-tighter">Tổng quan</span>
+<footer class="fixed bottom-0 inset-x-0 bg-white/90 backdrop-blur-md border-t border-slate-100 h-24 flex justify-around items-center px-6 z-50">
+    <button onclick="tab('admin', this)" class="nav-active flex flex-col items-center gap-1">
+        <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+        <span class="text-[8px] font-black uppercase">Quản trị</span>
     </button>
-    <button onclick="tab('pos', this)" class="text-slate-300 flex flex-col items-center gap-1 flex-1 transition-all">
-        <i data-lucide="coffee" class="w-6 h-6"></i>
-        <span class="text-[8px] font-black uppercase tracking-tighter">Bán hàng</span>
+    <button onclick="tab('pos', this)" class="text-slate-300 flex flex-col items-center gap-1">
+        <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+        <span class="text-[8px] font-black uppercase">Bán hàng</span>
     </button>
-    <button onclick="tab('hrm', this)" class="text-slate-300 flex flex-col items-center gap-1 flex-1 transition-all">
-        <i data-lucide="users" class="w-6 h-6"></i>
-        <span class="text-[8px] font-black uppercase tracking-tighter">Nhân sự</span>
+    <button onclick="tab('hrm', this)" class="text-slate-300 flex flex-col items-center gap-1">
+        <i data-lucide="user-check" class="w-6 h-6"></i>
+        <span class="text-[8px] font-black uppercase">Nhân sự</span>
     </button>
 </footer>
 
 <script>
-    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyB-rTmNSqnZ18y15esxbBQko-Gf0TqqmVQ",
         authDomain: "quan-ly-van-hanh.firebaseapp.com",
@@ -155,125 +119,102 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const menu = [{n:'Cafe Đen',p:25000},{n:'Sữa Đá',p:30000},{n:'Bạc Xỉu',p:35000},{n:'Trà Đào',p:40000},{n:'Cam Sả',p:45000},{n:'Matcha',p:45000}];
+    // --- CẤU HÌNH ĐỊNH MỨC (RECIPE) ---
+    const menuItems = [
+        {n:'Cafe Đen', p:25000, recipe: { "Hạt Cafe (g)": 20 }},
+        {n:'Cafe Sữa', p:30000, recipe: { "Hạt Cafe (g)": 20, "Sữa đặc (ml)": 30 }},
+        {n:'Bạc Xỉu', p:35000, recipe: { "Hạt Cafe (g)": 15, "Sữa đặc (ml)": 50 }}
+    ];
 
     function init() {
         lucide.createIcons();
+        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
         const grid = document.getElementById('menuGrid');
-        menu.forEach(i => {
-            grid.innerHTML += `<button onclick="document.getElementById('orderNote').value='${i.n}'" class="p-4 bg-white border border-slate-50 rounded-2xl shadow-sm text-[10px] font-extrabold hover:border-indigo-500 active:bg-indigo-50 active:scale-95 transition-all uppercase tracking-tighter text-slate-600">${i.n}</button>`;
+        menuItems.forEach(i => {
+            grid.innerHTML += `<button onclick="document.getElementById('orderInput').value='${i.n}'" class="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] font-bold text-slate-600 hover:bg-indigo-600 hover:text-white active:scale-95 transition-all text-left flex justify-between items-center"><span>${i.n}</span><i data-lucide="plus" class="w-3 h-3"></i></button>`;
         });
-        document.getElementById('currentDate').innerText = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
+        lucide.createIcons();
     }
 
-    // TABS
     function tab(id, btn) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active-tab'));
         document.getElementById(id).classList.add('active-tab');
         document.querySelectorAll('footer button').forEach(b => {
-            b.classList.add('text-slate-300');
             b.classList.remove('nav-active');
+            b.classList.add('text-slate-300');
         });
-        btn.classList.add('nav-active');
-        btn.classList.remove('text-slate-300');
+        if(btn.tagName === 'BUTTON') {
+            btn.classList.add('nav-active');
+            btn.classList.remove('text-slate-300');
+        }
         lucide.createIcons();
     }
 
-    // POS LOGIC
-    function sendOrder() {
-        const name = document.getElementById('orderNote').value;
-        if(!name) return;
-        const price = menu.find(m => m.n === name)?.p || 0;
-        db.ref('orders').push({ name, price, status: 'pending', time: Date.now() });
-        document.getElementById('orderNote').value = '';
+    // --- LOGIC KHO HÀNG ---
+    function updateStock() {
+        const item = document.getElementById('stockItem').value;
+        const qty = parseInt(document.getElementById('stockQty').value);
+        if(!qty) return;
+        db.ref('inventory/' + item).transaction(current => (current || 0) + qty);
+        document.getElementById('stockQty').value = '';
+        tab('admin', document.querySelector('footer button'));
     }
 
-    // REALTIME CORE
-    db.ref('orders').on('value', snap => {
-        const data = snap.val();
-        const list = document.getElementById('liveOrders');
-        list.innerHTML = ''; let revenue = 0; let pending = 0;
+    db.ref('inventory').on('value', snap => {
+        const list = document.getElementById('stockList');
+        const warning = document.getElementById('stockWarning');
+        list.innerHTML = ''; let critical = false;
+        const data = snap.val() || {};
+        
+        Object.keys(data).forEach(item => {
+            const qty = data[item];
+            const isLow = qty < 500; // Cảnh báo nếu dưới 500 (g hoặc ml)
+            if(isLow) critical = true;
+            list.innerHTML += `
+                <div class="p-3 rounded-2xl border ${isLow ? 'critical-stock border-red-200' : 'bg-slate-50 border-slate-100'}">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">${item}</p>
+                    <p class="text-sm font-black ${isLow ? 'text-red-600' : 'text-slate-800'}">${qty.toLocaleString()}</p>
+                </div>`;
+        });
+        warning.classList.toggle('hidden', !critical);
+    });
 
-        if(data) {
-            Object.keys(data).reverse().forEach(k => {
-                const o = data[k];
-                if(o.status === 'done') revenue += o.price;
+    // --- LOGIC BÁN HÀNG & TRỪ KHO ---
+    function addOrder() {
+        const name = document.getElementById('orderInput').value;
+        const item = menuItems.find(m => m.n === name);
+        if(!item) return;
+
+        // Lưu đơn hàng
+        db.ref('orders').push({ name, price: item.p, status: 'pending', time: Date.now() });
+
+        // Tự động trừ kho dựa trên Recipe
+        if(item.recipe) {
+            Object.keys(item.recipe).forEach(ing => {
+                db.ref('inventory/' + ing).transaction(current => (current || 0) - item.recipe[ing]);
+            });
+        }
+        document.getElementById('orderInput').value = '';
+    }
+
+    // --- REALTIME ORDERS ---
+    db.ref('orders').on('value', snap => {
+        const list = document.getElementById('orderList');
+        list.innerHTML = ''; let rev = 0;
+        if(snap.val()) {
+            Object.keys(snap.val()).reverse().forEach(k => {
+                const o = snap.val()[k];
+                if(o.status === 'done') rev += o.price;
                 else {
-                    pending++;
                     list.innerHTML += `
-                    <div class="bg-white p-5 rounded-[2.5rem] flex justify-between items-center shadow-sm border border-slate-50 animate-pulse">
-                        <div class="flex items-center gap-4">
-                            <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
-                            <div><h5 class="font-black text-sm text-slate-800">${o.name}</h5><p class="text-[9px] font-bold text-slate-300 uppercase">Đang chờ pha chế</p></div>
-                        </div>
-                        <button onclick="db.ref('orders/${k}').update({status:'done'})" class="bg-slate-900 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase active:scale-90 transition">Xong</button>
-                    </div>`;
+                        <div class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-slate-100">
+                            <div><p class="text-sm font-black">${o.name}</p><p class="text-[9px] text-slate-300 font-bold uppercase">${new Date(o.time).toLocaleTimeString()}</p></div>
+                            <button onclick="db.ref('orders/${k}').update({status:'done'})" class="bg-indigo-600 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase">Hoàn tất</button>
+                        </div>`;
                 }
             });
         }
-        document.getElementById('revVal').innerText = revenue.toLocaleString() + 'đ';
-        document.getElementById('badge').innerText = pending;
-        document.getElementById('pendingNum').innerText = pending;
-        document.getElementById('alertBox').style.display = pending > 0 ? 'flex' : 'none';
-        lucide.createIcons();
-    });
-
-    // CAMERA & HRM
-    function openCamera() {
-        if(!document.getElementById('staffName').value) return alert("Vui lòng nhập tên!");
-        document.getElementById('camera-overlay').style.display = 'flex';
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(s => document.getElementById('webcam').srcObject = s);
-    }
-
-    function closeCamera() {
-        const s = document.getElementById('webcam').srcObject;
-        if(s) s.getTracks().forEach(t => t.stop());
-        document.getElementById('camera-overlay').style.display = 'none';
-    }
-
-    function capturePhoto() {
-        const v = document.getElementById('webcam');
-        const c = document.getElementById('photoCanvas');
-        c.width = 300; c.height = 300;
-        c.getContext('2d').drawImage(v, 0, 0, 300, 300);
-        const img = c.toDataURL('image/jpeg', 0.5);
-        
-        db.ref('attendance').push({
-            name: document.getElementById('staffName').value,
-            photo: img,
-            time: new Date().toLocaleTimeString('vi-VN'),
-            timestamp: Date.now()
-        });
-        closeCamera();
-        alert("Check-in FaceID thành công!");
-    }
-
-    db.ref('attendance').limitToLast(3).on('value', snap => {
-        const list = document.getElementById('attendanceList');
-        list.innerHTML = '';
-        let totalHours = 0;
-        snap.forEach(child => {
-            const v = child.val();
-            totalHours += 4; // Demo: Giả định mỗi lần check-in tính 4 tiếng
-            list.innerHTML += `
-            <div class="bg-white p-4 rounded-3xl flex items-center justify-between shadow-sm border border-slate-50">
-                <div class="flex items-center gap-4">
-                    <img src="${v.photo}" class="w-12 h-12 rounded-2xl object-cover shadow-sm">
-                    <div><h5 class="font-bold text-sm text-slate-800">${v.name}</h5><p class="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">${v.time} • Tại Quán</p></div>
-                </div>
-                <div class="bg-green-50 text-green-600 px-3 py-1 rounded-full text-[9px] font-black uppercase">On Duty</div>
-            </div>`;
-        });
-        document.getElementById('salaryVal').innerText = (totalHours * 25000).toLocaleString() + 'đ';
-    });
-
-    // CHART
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: { labels: ['6h','9h','12h','15h','18h','21h'], datasets: [{ data: [3, 12, 7, 25, 18, 10], borderColor: '#4f46e5', tension: 0.4, fill: true, backgroundColor: 'rgba(79, 70, 229, 0.05)', pointRadius: 0 }] },
-        options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+        document.getElementById('revVal').innerText = rev.toLocaleString() + 'đ';
     });
 
     init();
