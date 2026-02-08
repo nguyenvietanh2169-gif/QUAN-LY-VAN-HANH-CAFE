@@ -1,266 +1,173 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart ERP Cafe v2.0 - Cafeflow</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CafeFlow ERP</title>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; margin: 0; padding-bottom: 120px; }
-        .tab-content { display: none; }
-        .active-tab { display: block; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-active { color: #4f46e5 !important; background: #eef2ff; border-radius: 1.5rem; }
-        #camera-ui { display: none; position: fixed; inset: 0; background: #000; z-index: 999; flex-direction: column; align-items: center; justify-content: center; }
-        video { width: 90%; border-radius: 2rem; border: 4px solid #fff; transform: scaleX(-1); }
-    </style>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+<style>
+body { font-family: system-ui; background:#f8fafc }
+.card { border-radius:24px }
+</style>
 </head>
-<body>
 
-<div id="camera-ui">
-    <video id="video" autoplay playsinline></video>
-    <div class="mt-10 flex gap-8">
-        <button onclick="takeSnap()" class="bg-white p-6 rounded-full shadow-2xl"><i data-lucide="camera" class="text-indigo-600"></i></button>
-        <button onclick="closeCam()" class="bg-red-500 p-6 rounded-full text-white"><i data-lucide="x"></i></button>
-    </div>
+<body class="max-w-xl mx-auto p-4 space-y-6">
+
+<h1 class="text-2xl font-black text-center text-indigo-600">CafeFlow ERP</h1>
+
+<!-- ===== ADMIN ===== -->
+<div class="card bg-white p-6 shadow">
+<h2 class="font-black mb-4">📊 Dashboard</h2>
+<p>Doanh thu: <span id="revenue">0</span> đ</p>
+<p>Lương tạm tính: <span id="payroll">0</span> đ</p>
 </div>
 
-<header class="bg-white px-6 pt-12 pb-8 rounded-b-[3rem] shadow-sm flex justify-between items-center border-b border-indigo-50">
-    <div>
-        <h1 class="text-2xl font-black text-slate-900 tracking-tighter">Smart <span class="text-indigo-600">ERP</span></h1>
-        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Hệ thống quản trị hợp nhất</p>
-    </div>
-    <div class="relative bg-slate-50 p-3 rounded-2xl">
-        <i data-lucide="bell" class="w-5 h-5 text-slate-400"></i>
-        <span id="notifCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold border-2 border-white hidden">0</span>
-    </div>
-</header>
+<!-- ===== POS ===== -->
+<div class="card bg-white p-6 shadow space-y-4">
+<h2 class="font-black">☕ POS</h2>
+<div id="menu" class="grid grid-cols-2 gap-3"></div>
+</div>
 
-<main class="max-w-xl mx-auto p-4 space-y-6">
+<!-- ===== ORDERS ===== -->
+<div class="card bg-white p-6 shadow">
+<h2 class="font-black mb-3">🧾 Đơn đang chờ</h2>
+<div id="orders" class="space-y-2"></div>
+</div>
 
-    <div id="admin" class="tab-content active-tab space-y-6">
-        <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Doanh thu</p>
-                <h3 id="revVal" class="text-xl font-black text-slate-800">0đ</h3>
-            </div>
-            <div class="bg-indigo-600 p-6 rounded-[2.5rem] text-white shadow-xl shadow-indigo-100">
-                <p class="text-[10px] font-bold opacity-70 uppercase mb-1">Lương nhân sự</p>
-                <h3 id="payrollVal" class="text-xl font-black text-white">0đ</h3>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-[2.5rem] shadow-sm">
-            <div class="flex justify-between items-center mb-6 px-2">
-                <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest">Tồn kho vật liệu</h4>
-                <i data-lucide="refresh-cw" class="w-4 h-4 text-slate-300" onclick="location.reload()"></i>
-            </div>
-            <div id="stockGrid" class="grid grid-cols-2 gap-3"></div>
-        </div>
-
-        <div class="space-y-4">
-            <h4 class="text-xs font-black text-slate-400 uppercase px-4">Nhân sự thực tế</h4>
-            <div id="staffList" class="space-y-3"></div>
-        </div>
-    </div>
-
-    <div id="pos" class="tab-content space-y-4">
-        <div class="bg-white p-6 rounded-[3rem] shadow-xl border border-white">
-            <div id="menu" class="grid grid-cols-2 gap-3 mb-4"></div>
-            <div class="flex gap-2">
-                <input type="text" id="orderNote" placeholder="Ghi chú món..." class="flex-1 bg-slate-50 p-5 rounded-3xl text-sm font-bold outline-none border-2 border-transparent focus:border-indigo-100">
-                <button onclick="createOrder()" class="bg-indigo-600 text-white px-8 rounded-3xl font-black shadow-lg shadow-indigo-100 active:scale-95 transition-all">GỬI</button>
-            </div>
-        </div>
-        <div id="liveOrders" class="space-y-3"></div>
-    </div>
-
-    <div id="hrm" class="tab-content space-y-6">
-        <div class="bg-white p-10 rounded-[3rem] text-center shadow-sm border border-slate-100">
-            <div class="w-24 h-24 bg-indigo-50 rounded-[2.5rem] mx-auto mb-6 flex items-center justify-center text-indigo-600 shadow-inner">
-                <i data-lucide="shield-check" class="w-12 h-12"></i>
-            </div>
-            <h3 class="text-xl font-black text-slate-800 mb-2">Chấm công FaceID</h3>
-            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-8">Hệ thống ghi nhận thời gian thực</p>
-            <input type="text" id="staffName" placeholder="Tên nhân viên..." class="w-full bg-slate-50 p-5 rounded-2xl mb-6 text-center text-lg font-black outline-none border-2 border-transparent focus:border-indigo-500">
-            <button onclick="openCam()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black tracking-[0.2em] shadow-2xl active:scale-95 transition-all">CHECK-IN</button>
-        </div>
-    </div>
-
-</main>
-
-<footer class="fixed bottom-6 left-6 right-6 h-22 bg-white/90 backdrop-blur-2xl shadow-xl rounded-[2.5rem] border border-white/50 flex justify-around items-center px-4 z-[500]">
-    <button onclick="nav('admin', this)" class="nav-active p-4 flex flex-col items-center gap-1 transition-all">
-        <i data-lucide="layout-grid" class="w-6 h-6"></i>
-        <span class="text-[8px] font-black uppercase">Admin</span>
-    </button>
-    <button onclick="nav('pos', this)" class="p-4 flex flex-col items-center gap-1 text-slate-300 transition-all">
-        <i data-lucide="coffee" class="w-6 h-6"></i>
-        <span class="text-[8px] font-black uppercase">POS</span>
-    </button>
-    <button onclick="nav('hrm', this)" class="p-4 flex flex-col items-center gap-1 text-slate-300 transition-all">
-        <i data-lucide="user-check" class="w-6 h-6"></i>
-        <span class="text-[8px] font-black uppercase">HRM</span>
-    </button>
-</footer>
+<!-- ===== HRM ===== -->
+<div class="card bg-white p-6 shadow space-y-3">
+<h2 class="font-black">👤 Nhân sự</h2>
+<input id="staffName" placeholder="Tên nhân viên" class="w-full p-3 rounded-xl bg-slate-100">
+<button onclick="checkIn()" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-black">CHECK IN</button>
+<div id="staffList" class="space-y-2"></div>
+</div>
 
 <script>
-    // 1. CẤU HÌNH FIREBASE
-    const firebaseConfig = {
-        apiKey: "AIzaSyD0Lb8SoZN5AV4XmGp_S4lr5MfejRbpLBo",
-        authDomain: "cafeflow-c15b2.firebaseapp.com",
-        databaseURL: "https://cafeflow-c15b2-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "cafeflow-c15b2",
-        storageBucket: "cafeflow-c15b2.firebasestorage.app",
-        messagingSenderId: "509075304992",
-        appId: "1:509075304992:web:a6bb2349e87d09aa290245",
-        measurementId: "G-VJ0SY8FP0L"
-    };
+/* ================= FIREBASE ================= */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    const menu = [
-        {n:'Cafe Đen', p:25000, r:{"Hạt Cafe (g)":20}},
-        {n:'Cafe Sữa', p:30000, r:{"Hạt Cafe (g)":20, "Sữa đặc (ml)":30}},
-        {n:'Bạc Xỉu', p:35000, r:{"Hạt Cafe (g)":15, "Sữa đặc (ml)":50}}
-    ];
-
-    // 2. KHỞI TẠO ỨNG DỤNG
-    function init() {
-        lucide.createIcons();
-        const mContainer = document.getElementById('menu');
-        mContainer.innerHTML = '';
-        menu.forEach(item => {
-            mContainer.innerHTML += `<button onclick="document.getElementById('orderNote').value='${item.n}'" class="p-5 bg-slate-50 border border-slate-100 rounded-3xl text-[11px] font-black text-slate-600 hover:bg-indigo-600 hover:text-white transition-all text-left uppercase">${item.n}</button>`;
-        });
+/* ================= SEED DATA ================= */
+function seed() {
+  db.ref('products').once('value', s => {
+    if (!s.exists()) {
+      db.ref('products').set({
+        cafe_den:{name:"Cafe Đen",price:25000,recipe:{"Hạt Cafe":20}},
+        cafe_sua:{name:"Cafe Sữa",price:30000,recipe:{"Hạt Cafe":20,"Sữa":30}}
+      });
     }
+  });
 
-    function nav(id, btn) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active-tab'));
-        document.getElementById(id).classList.add('active-tab');
-        document.querySelectorAll('footer button').forEach(b => {
-            b.classList.remove('nav-active', 'text-indigo-600');
-            b.classList.add('text-slate-300');
-        });
-        btn.classList.add('nav-active');
-        btn.classList.remove('text-slate-300');
-        lucide.createIcons();
+  db.ref('inventory').once('value', s => {
+    if (!s.exists()) {
+      db.ref('inventory').set({
+        "Hạt Cafe":5000,
+        "Sữa":2000
+      });
     }
+  });
 
-    // 3. LOGIC POS & KHO
-    function createOrder() {
-        const name = document.getElementById('orderNote').value;
-        const item = menu.find(i => i.n === name);
-        if(!item) return alert("Vui lòng chọn món!");
-        db.ref('orders').push({ name, price: item.p, status: 'pending', time: Date.now() });
-        document.getElementById('orderNote').value = '';
+  db.ref('staff').once('value', s => {
+    if (!s.exists()) {
+      db.ref('staff').set({
+        nv01:{name:"Nhân viên 1",salary:25000}
+      });
     }
+  });
+}
+seed();
 
-    function completeOrder(key, itemName) {
-        const item = menu.find(i => i.n === itemName);
-        db.ref('orders/' + key).update({ status: 'done' });
-        if(item && item.r) {
-            Object.keys(item.r).forEach(ing => {
-                db.ref('inventory/' + ing).transaction(curr => (curr || 0) - item.r[ing]);
-            });
-        }
-    }
+/* ================= POS ================= */
+db.ref('products').on('value', snap => {
+  const menu = document.getElementById('menu');
+  menu.innerHTML = '';
+  snap.forEach(p => {
+    const d = p.val();
+    menu.innerHTML += `
+      <button onclick="order('${p.key}')"
+      class="p-4 bg-slate-100 rounded-xl font-bold">
+      ${d.name}<br>${d.price.toLocaleString()}đ
+      </button>`;
+  });
+});
 
-    db.ref('orders').on('value', snap => {
-        const list = document.getElementById('liveOrders');
-        list.innerHTML = ''; let rev = 0; let pending = 0;
-        const data = snap.val();
-        if(data) {
-            Object.keys(data).reverse().forEach(k => {
-                const o = data[k];
-                if(o.status === 'done') rev += o.price;
-                else {
-                    pending++;
-                    list.innerHTML += `<div class="bg-white p-6 rounded-[2.5rem] flex justify-between items-center shadow-sm border border-slate-50">
-                        <div><p class="font-black text-slate-800">${o.name}</p><p class="text-[9px] font-bold text-slate-300 uppercase">${new Date(o.time).toLocaleTimeString()}</p></div>
-                        <button onclick="completeOrder('${k}', '${o.name}')" class="bg-slate-900 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase">Thu tiền</button>
-                    </div>`;
-                }
-            });
-        }
-        document.getElementById('revVal').innerText = rev.toLocaleString() + 'đ';
-        document.getElementById('notifCount').innerText = pending;
-        document.getElementById('notifCount').classList.toggle('hidden', pending === 0);
+function order(id) {
+  db.ref('products/'+id).once('value', s => {
+    const p = s.val();
+    db.ref('orders').push({
+      product:id,
+      name:p.name,
+      price:p.price,
+      status:"pending",
+      time:Date.now()
     });
+  });
+}
 
-    db.ref('inventory').on('value', snap => {
-        const g = document.getElementById('stockGrid');
-        g.innerHTML = '';
-        let data = snap.val();
-        if(!data) {
-            data = {"Hạt Cafe (g)": 5000, "Sữa đặc (ml)": 2000};
-            db.ref('inventory').set(data);
-        }
-        Object.keys(data).forEach(i => {
-            const low = data[i] < 500;
-            g.innerHTML += `<div class="p-4 rounded-[1.5rem] border ${low ? 'bg-red-50 border-red-100 animate-pulse' : 'bg-slate-50 border-slate-100'}">
-                <p class="text-[9px] font-bold text-slate-400 uppercase">${i}</p>
-                <p class="text-sm font-black ${low ? 'text-red-600' : 'text-slate-800'}">${data[i].toLocaleString()}</p>
-            </div>`;
-        });
+db.ref('orders').on('value', snap => {
+  const box = document.getElementById('orders');
+  box.innerHTML = '';
+  let rev = 0;
+  snap.forEach(o => {
+    const d = o.val();
+    if(d.status==="done") rev += d.price;
+    else box.innerHTML += `
+      <div class="flex justify-between">
+      ${d.name}
+      <button onclick="done('${o.key}','${d.product}')" class="text-indigo-600">Xong</button>
+      </div>`;
+  });
+  document.getElementById('revenue').innerText = rev.toLocaleString();
+});
+
+/* ================= COMPLETE ORDER ================= */
+function done(key, productId) {
+  db.ref('products/'+productId).once('value', s => {
+    const r = s.val().recipe;
+    Object.keys(r).forEach(i => {
+      db.ref('inventory/'+i).transaction(v => (v||0)-r[i]);
     });
+  });
+  db.ref('orders/'+key).update({status:"done"});
+}
 
-    // 4. LOGIC HRM (CHẤM CÔNG)
-    function openCam() {
-        if(!document.getElementById('staffName').value) return alert("Nhập tên!");
-        document.getElementById('camera-ui').style.display = 'flex';
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(s => document.getElementById('video').srcObject = s)
-            .catch(() => { alert("Lỗi camera!"); closeCam(); });
-    }
+/* ================= HRM ================= */
+function checkIn() {
+  const name = staffName.value;
+  if(!name) return alert("Nhập tên");
+  db.ref('attendance').push({name,start:Date.now()});
+  staffName.value='';
+}
 
-    function closeCam() {
-        const s = document.getElementById('video').srcObject;
-        if(s) s.getTracks().forEach(t => t.stop());
-        document.getElementById('camera-ui').style.display = 'none';
-    }
-
-    function takeSnap() {
-        const v = document.getElementById('video');
-        const canvas = document.createElement('canvas');
-        canvas.width = 300; canvas.height = 300;
-        canvas.getContext('2d').drawImage(v, 0, 0, 300, 300);
-        db.ref('attendance').push({ 
-            name: document.getElementById('staffName').value, 
-            photo: canvas.toDataURL('image/jpeg', 0.5), 
-            start: Date.now() 
-        });
-        closeCam(); alert("Thành công!");
-    }
-
-    db.ref('attendance').on('value', snap => {
-        const list = document.getElementById('staffList');
-        list.innerHTML = ''; let pay = 0;
-        const data = snap.val();
-        if(data) {
-            Object.keys(data).forEach(k => {
-                const s = data[k];
-                const hours = (Date.now() - s.start) / 3600000;
-                pay += hours * 25000;
-                list.innerHTML += `<div class="bg-white p-4 rounded-[2rem] flex items-center justify-between border border-slate-50 shadow-sm">
-                    <div class="flex items-center gap-4">
-                        <img src="${s.photo}" class="w-12 h-12 rounded-2xl object-cover shadow-md border-2 border-white">
-                        <div><p class="font-black text-sm text-slate-800">${s.name}</p><p class="text-[9px] font-bold text-indigo-500 uppercase">Đang trực: ${hours.toFixed(1)}h</p></div>
-                    </div>
-                    <button onclick="db.ref('attendance/${k}').remove()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-[9px] font-black uppercase">Ra ca</button>
-                </div>`;
-            });
-        }
-        document.getElementById('payrollVal').innerText = Math.round(pay).toLocaleString() + 'đ';
-    });
-
-    init();
+db.ref('attendance').on('value', snap => {
+  const box = document.getElementById('staffList');
+  box.innerHTML='';
+  let pay=0;
+  snap.forEach(a => {
+    const h=(Date.now()-a.val().start)/3600000;
+    pay+=h*25000;
+    box.innerHTML+=`
+    <div class="flex justify-between">
+    ${a.val().name} (${h.toFixed(1)}h)
+    <button onclick="db.ref('attendance/${a.key}').remove()">Ra ca</button>
+    </div>`;
+  });
+  document.getElementById('payroll').innerText=Math.round(pay).toLocaleString();
+});
 </script>
 </body>
 </html>
