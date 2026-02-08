@@ -2,114 +2,74 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CafeFlow ERP</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-
-<style>
-body { font-family: system-ui; background:#f8fafc }
-.card { border-radius:24px }
-</style>
 </head>
 
-<body class="max-w-xl mx-auto p-4 space-y-6">
+<body class="p-4 max-w-md mx-auto bg-slate-100">
 
-<h1 class="text-2xl font-black text-center text-indigo-600">CafeFlow ERP</h1>
+<h1 class="text-xl font-black mb-4 text-center">CafeFlow ERP</h1>
 
-<!-- ===== ADMIN ===== -->
-<div class="card bg-white p-6 shadow">
-<h2 class="font-black mb-4">📊 Dashboard</h2>
-<p>Doanh thu: <span id="revenue">0</span> đ</p>
-<p>Lương tạm tính: <span id="payroll">0</span> đ</p>
+<div class="bg-white p-4 rounded-xl mb-4">
+<h2 class="font-bold mb-2">☕ Menu</h2>
+<div id="menu" class="grid grid-cols-2 gap-2"></div>
 </div>
 
-<!-- ===== POS ===== -->
-<div class="card bg-white p-6 shadow space-y-4">
-<h2 class="font-black">☕ POS</h2>
-<div id="menu" class="grid grid-cols-2 gap-3"></div>
-</div>
-
-<!-- ===== ORDERS ===== -->
-<div class="card bg-white p-6 shadow">
-<h2 class="font-black mb-3">🧾 Đơn đang chờ</h2>
-<div id="orders" class="space-y-2"></div>
-</div>
-
-<!-- ===== HRM ===== -->
-<div class="card bg-white p-6 shadow space-y-3">
-<h2 class="font-black">👤 Nhân sự</h2>
-<input id="staffName" placeholder="Tên nhân viên" class="w-full p-3 rounded-xl bg-slate-100">
-<button onclick="checkIn()" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-black">CHECK IN</button>
-<div id="staffList" class="space-y-2"></div>
+<div class="bg-white p-4 rounded-xl">
+<h2 class="font-bold mb-2">🧾 Đơn chờ</h2>
+<div id="orders"></div>
 </div>
 
 <script>
-/* ================= FIREBASE ================= */
+/* ===== FIREBASE CONFIG ===== */
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
   databaseURL: "https://YOUR_PROJECT-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* ================= SEED DATA ================= */
-function seed() {
-  db.ref('products').once('value', s => {
-    if (!s.exists()) {
-      db.ref('products').set({
-        cafe_den:{name:"Cafe Đen",price:25000,recipe:{"Hạt Cafe":20}},
-        cafe_sua:{name:"Cafe Sữa",price:30000,recipe:{"Hạt Cafe":20,"Sữa":30}}
-      });
-    }
-  });
+console.log("🔥 Firebase connected");
 
-  db.ref('inventory').once('value', s => {
-    if (!s.exists()) {
-      db.ref('inventory').set({
-        "Hạt Cafe":5000,
-        "Sữa":2000
-      });
-    }
-  });
+/* ===== SEED DATA (CHẠY 1 LẦN) ===== */
+db.ref('products').once('value').then(snap=>{
+  if(!snap.exists()){
+    console.log("🌱 Seeding products");
+    db.ref('products').set({
+      cafe_den:{name:"Cafe Đen",price:25000},
+      cafe_sua:{name:"Cafe Sữa",price:30000}
+    });
+  }
+});
 
-  db.ref('staff').once('value', s => {
-    if (!s.exists()) {
-      db.ref('staff').set({
-        nv01:{name:"Nhân viên 1",salary:25000}
-      });
-    }
-  });
-}
-seed();
-
-/* ================= POS ================= */
-db.ref('products').on('value', snap => {
-  const menu = document.getElementById('menu');
-  menu.innerHTML = '';
-  snap.forEach(p => {
-    const d = p.val();
-    menu.innerHTML += `
-      <button onclick="order('${p.key}')"
-      class="p-4 bg-slate-100 rounded-xl font-bold">
-      ${d.name}<br>${d.price.toLocaleString()}đ
+/* ===== LOAD MENU ===== */
+db.ref('products').on('value', snap=>{
+  console.log("📦 Products loaded");
+  const menu=document.getElementById('menu');
+  menu.innerHTML='';
+  snap.forEach(p=>{
+    const d=p.val();
+    menu.innerHTML+=`
+      <button 
+        class="bg-slate-200 p-3 rounded-xl font-bold"
+        onclick="order('${p.key}')">
+        ${d.name}<br>${d.price.toLocaleString()}đ
       </button>`;
   });
 });
 
-function order(id) {
-  db.ref('products/'+id).once('value', s => {
-    const p = s.val();
+/* ===== ORDER ===== */
+function order(id){
+  console.log("🛒 Order",id);
+  db.ref('products/'+id).once('value').then(s=>{
+    const p=s.val();
     db.ref('orders').push({
-      product:id,
       name:p.name,
       price:p.price,
       status:"pending",
@@ -118,56 +78,29 @@ function order(id) {
   });
 }
 
-db.ref('orders').on('value', snap => {
-  const box = document.getElementById('orders');
-  box.innerHTML = '';
-  let rev = 0;
-  snap.forEach(o => {
-    const d = o.val();
-    if(d.status==="done") rev += d.price;
-    else box.innerHTML += `
-      <div class="flex justify-between">
-      ${d.name}
-      <button onclick="done('${o.key}','${d.product}')" class="text-indigo-600">Xong</button>
-      </div>`;
+/* ===== LOAD ORDERS ===== */
+db.ref('orders').on('value', snap=>{
+  const box=document.getElementById('orders');
+  box.innerHTML='';
+  snap.forEach(o=>{
+    const d=o.val();
+    if(d.status==="pending"){
+      box.innerHTML+=`
+        <div class="flex justify-between py-1">
+          ${d.name}
+          <button class="text-indigo-600"
+            onclick="done('${o.key}')">Xong</button>
+        </div>`;
+    }
   });
-  document.getElementById('revenue').innerText = rev.toLocaleString();
 });
 
-/* ================= COMPLETE ORDER ================= */
-function done(key, productId) {
-  db.ref('products/'+productId).once('value', s => {
-    const r = s.val().recipe;
-    Object.keys(r).forEach(i => {
-      db.ref('inventory/'+i).transaction(v => (v||0)-r[i]);
-    });
-  });
+/* ===== COMPLETE ===== */
+function done(key){
+  console.log("✅ Done",key);
   db.ref('orders/'+key).update({status:"done"});
 }
-
-/* ================= HRM ================= */
-function checkIn() {
-  const name = staffName.value;
-  if(!name) return alert("Nhập tên");
-  db.ref('attendance').push({name,start:Date.now()});
-  staffName.value='';
-}
-
-db.ref('attendance').on('value', snap => {
-  const box = document.getElementById('staffList');
-  box.innerHTML='';
-  let pay=0;
-  snap.forEach(a => {
-    const h=(Date.now()-a.val().start)/3600000;
-    pay+=h*25000;
-    box.innerHTML+=`
-    <div class="flex justify-between">
-    ${a.val().name} (${h.toFixed(1)}h)
-    <button onclick="db.ref('attendance/${a.key}').remove()">Ra ca</button>
-    </div>`;
-  });
-  document.getElementById('payroll').innerText=Math.round(pay).toLocaleString();
-});
 </script>
+
 </body>
 </html>
