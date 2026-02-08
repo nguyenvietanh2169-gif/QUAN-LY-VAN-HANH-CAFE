@@ -2,243 +2,102 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CafeFlow Luxury ERP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CafeFlow ERP - Tổng Thể</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            min-height: 100vh;
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 2rem;
-        }
-        .tab-content { display: none; }
-        .active-tab { display: block; animation: slideUp 0.4s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-active { color: #6366f1 !important; }
-        .nav-active i { transform: translateY(-4px); color: #6366f1; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .menu-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .menu-card:active { transform: scale(0.95); }
     </style>
 </head>
-<body class="pb-28">
+<body class="p-6">
 
-<header class="p-6 flex justify-between items-center">
-    <div>
-        <h1 class="text-2xl font-extrabold text-slate-800 tracking-tighter">Cafe<span class="text-indigo-600">Flow</span></h1>
-        <div class="flex items-center gap-2 mt-1">
-            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hệ thống trực tuyến</span>
+    <header class="max-w-4xl mx-auto mb-10 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Quản trị <span class="text-indigo-600">Hợp nhất</span></h1>
+            <p class="text-slate-500 font-medium">Chào buổi sáng, Chủ quán!</p>
         </div>
-    </div>
-    <div class="w-12 h-12 glass-card flex items-center justify-center shadow-sm">
-        <i data-lucide="bell" class="w-5 h-5 text-slate-600"></i>
-    </div>
-</header>
-
-<main class="max-w-md mx-auto px-4 space-y-6">
-
-    <div id="admin" class="tab-content active-tab space-y-6">
-        <div class="grid grid-cols-2 gap-4">
-            <div class="glass-card p-6 shadow-xl shadow-indigo-100/20">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Doanh thu</p>
-                <h3 id="revVal" class="text-xl font-extrabold text-slate-800">0đ</h3>
-            </div>
-            <div class="bg-indigo-600 p-6 rounded-[2rem] text-white shadow-xl shadow-indigo-200">
-                <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-1">Đơn hàng</p>
-                <h3 id="orderCount" class="text-xl font-extrabold">0</h3>
-            </div>
+        <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200">
+            <i data-lucide="settings" class="text-slate-400 w-6 h-6"></i>
         </div>
+    </header>
 
-        <div class="glass-card p-6">
-            <h4 class="text-xs font-bold text-slate-400 uppercase mb-4 flex items-center gap-2">
-                <i data-lucide="package" class="w-4 h-4"></i> Tồn kho vật liệu
-            </h4>
-            <div id="stockGrid" class="grid grid-cols-2 gap-3"></div>
+    <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Doanh thu ngày</p>
+            <h3 class="text-lg font-black text-indigo-600">2.450k</h3>
         </div>
-
-        <div id="adminPanel" class="glass-card p-6 border-2 border-indigo-100/50">
-            <h4 class="font-extrabold text-slate-800 mb-4">Cài đặt Menu</h4>
-            <div id="adminAuth">
-                <input type="password" id="adminPass" placeholder="Mật khẩu chủ quán" class="w-full p-4 bg-white/50 rounded-2xl mb-3 outline-none focus:ring-2 ring-indigo-400 text-sm">
-                <button onclick="checkAdmin()" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold text-sm">XÁC THỰC</button>
-            </div>
-            <div id="adminControls" class="hidden space-y-4">
-                <input type="text" id="pName" placeholder="Tên món" class="w-full p-4 bg-white rounded-xl text-sm border-none outline-none">
-                <input type="number" id="pPrice" placeholder="Giá bán" class="w-full p-4 bg-white rounded-xl text-sm border-none outline-none">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" id="pCafe" placeholder="Cafe (g)" class="p-3 bg-white rounded-xl text-xs border-none outline-none">
-                    <input type="number" id="pSua" placeholder="Sữa (ml)" class="p-3 bg-white rounded-xl text-xs border-none outline-none">
-                </div>
-                <button onclick="addMenu()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-indigo-200">THÊM VÀO MENU</button>
-                <div id="adminMenuList" class="space-y-2 mt-4 max-h-40 overflow-y-auto"></div>
-            </div>
+        <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Đơn hàng</p>
+            <h3 class="text-lg font-black text-slate-800">42</h3>
+        </div>
+        <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Nhân sự trực</p>
+            <h3 class="text-lg font-black text-slate-800">03</h3>
+        </div>
+        <div class="bg-orange-50 p-4 rounded-3xl border border-orange-100">
+            <p class="text-[10px] font-bold text-orange-400 uppercase">Cảnh báo kho</p>
+            <h3 class="text-lg font-black text-orange-600 font-bold text-sm">Hết Sữa!</h3>
         </div>
     </div>
 
-    <div id="pos" class="tab-content space-y-4">
-        <div class="flex justify-between items-center px-2">
-            <h2 class="text-lg font-extrabold text-slate-800">Menu Gọi Món</h2>
-            <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full uppercase">Bán tại chỗ</span>
-        </div>
+    <main class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        <div id="menuGrid" class="grid grid-cols-2 gap-4"></div>
-
-        <div class="glass-card p-6 shadow-2xl border-t-4 border-indigo-500 mt-6">
-            <div id="cartItems" class="space-y-3 mb-6 min-h-[40px]">
-                <p class="text-center text-slate-400 text-sm">Giỏ hàng đang trống</p>
+        <button onclick="openModule('pos')" class="menu-card bg-indigo-600 p-8 rounded-[2.5rem] text-white text-left shadow-xl shadow-indigo-100 flex flex-col justify-between min-h-[180px]">
+            <i data-lucide="shopping-cart" class="w-10 h-10 mb-4 opacity-80"></i>
+            <div>
+                <h2 class="text-xl font-black uppercase tracking-wider">POS</h2>
+                <p class="text-xs opacity-70">Bán hàng & In hóa đơn</p>
             </div>
-            <div class="flex justify-between items-center py-4 border-t border-dashed">
-                <span class="text-sm font-bold text-slate-400 uppercase">Tổng cộng</span>
-                <span id="totalPrice" class="text-2xl font-black text-slate-800">0đ</span>
+        </button>
+
+        <button onclick="openModule('inventory')" class="menu-card bg-white p-8 rounded-[2.5rem] border border-slate-200 text-left shadow-sm flex flex-col justify-between min-h-[180px]">
+            <i data-lucide="package" class="w-10 h-10 mb-4 text-indigo-500"></i>
+            <div>
+                <h2 class="text-xl font-black text-slate-800 uppercase tracking-wider">Kho</h2>
+                <p class="text-xs text-slate-400">Nguyên liệu & Tồn kho</p>
             </div>
-            <button onclick="checkout()" class="w-full bg-indigo-600 text-white py-5 rounded-[1.5rem] font-extrabold shadow-xl shadow-indigo-200 active:scale-95 transition-all uppercase tracking-widest">
-                Xác nhận đơn hàng
-            </button>
-        </div>
-    </div>
+        </button>
 
-</main>
+        <button onclick="openModule('hrm')" class="menu-card bg-white p-8 rounded-[2.5rem] border border-slate-200 text-left shadow-sm flex flex-col justify-between min-h-[180px]">
+            <i data-lucide="users" class="w-10 h-10 mb-4 text-emerald-500"></i>
+            <div>
+                <h2 class="text-xl font-black text-slate-800 uppercase tracking-wider">Nhân sự</h2>
+                <p class="text-xs text-slate-400">Chấm công & Tiền lương</p>
+            </div>
+        </button>
 
-<nav class="fixed bottom-6 left-6 right-6 h-20 glass-card shadow-2xl flex justify-around items-center px-6 z-50">
-    <button onclick="nav('pos', this)" class="nav-active flex flex-col items-center gap-1 transition-all duration-300">
-        <i data-lucide="coffee" class="w-6 h-6"></i>
-        <span class="text-[9px] font-extrabold uppercase tracking-tighter">Bán hàng</span>
-    </button>
-    <button onclick="nav('admin', this)" class="text-slate-400 flex flex-col items-center gap-1 transition-all duration-300">
-        <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
-        <span class="text-[9px] font-extrabold uppercase tracking-tighter">Quản trị</span>
-    </button>
-</nav>
+        <button onclick="openModule('finance')" class="menu-card bg-white p-8 rounded-[2.5rem] border border-slate-200 text-left shadow-sm flex flex-col justify-between min-h-[180px]">
+            <i data-lucide="pie-chart" class="w-10 h-10 mb-4 text-rose-500"></i>
+            <div>
+                <h2 class="text-xl font-black text-slate-800 uppercase tracking-wider">Tài chính</h2>
+                <p class="text-xs text-slate-400">Lợi nhuận & Chi phí</p>
+            </div>
+        </button>
 
-<script>
-    // --- FIREBASE CONFIG (Dán thông tin của bạn vào đây) ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyD0Lb8SoZN5AV4XmGp_S4lr5MfejRbpLBo",
-        authDomain: "cafeflow-c15b2.firebaseapp.com",
-        databaseURL: "https://cafeflow-c15b2-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "cafeflow-c15b2",
-        storageBucket: "cafeflow-c15b2.firebasestorage.app",
-        messagingSenderId: "509075304992",
-        appId: "1:509075304992:web:a6bb2349e87d09aa290245"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+        <button onclick="openModule('operations')" class="menu-card bg-slate-900 p-8 rounded-[2.5rem] text-white text-left shadow-xl flex flex-col justify-between min-h-[180px] md:col-span-2">
+            <i data-lucide="settings-2" class="w-10 h-10 mb-4 text-indigo-400"></i>
+            <div>
+                <h2 class="text-xl font-black uppercase tracking-wider">Vận hành</h2>
+                <p class="text-xs opacity-70">Thiết lập Menu, Công thức & Quy trình</p>
+            </div>
+        </button>
 
-    let cart = [];
-    const ADMIN_PASS = "123";
+    </main>
 
-    function nav(id, btn) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active-tab'));
-        document.getElementById(id).classList.add('active-tab');
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active'));
-        btn.classList.add('nav-active');
+    <footer class="max-w-4xl mx-auto mt-12 text-center">
+        <p class="text-[10px] font-bold text-slate-300 uppercase tracking-[0.3em]">CafeFlow ERP v2.0 Beta</p>
+    </footer>
+
+    <script>
         lucide.createIcons();
-    }
-
-    // Admin Auth
-    function checkAdmin() {
-        if(document.getElementById('adminPass').value === ADMIN_PASS) {
-            document.getElementById('adminAuth').classList.add('hidden');
-            document.getElementById('adminControls').classList.remove('hidden');
-        } else alert("Sai mật khẩu!");
-    }
-
-    // POS & Menu Logic
-    function addMenu() {
-        const name = document.getElementById('pName').value;
-        const price = parseInt(document.getElementById('pPrice').value);
-        const cafe = parseInt(document.getElementById('pCafe').value) || 0;
-        const sua = parseInt(document.getElementById('pSua').value) || 0;
-        if(name && price) {
-            db.ref('products').push({ name, price, recipe: { "Cafe (g)": cafe, "Sữa (ml)": sua } });
-            alert("Đã thêm món!");
+        
+        function openModule(name) {
+            alert("Bạn đang mở module: " + name.toUpperCase() + "\nChúng ta sẽ viết code chi tiết cho phần này sau!");
         }
-    }
-
-    db.ref('products').on('value', snap => {
-        const grid = document.getElementById('menuGrid');
-        const adminList = document.getElementById('adminMenuList');
-        grid.innerHTML = ''; adminList.innerHTML = '';
-        snap.forEach(child => {
-            const p = child.val();
-            grid.innerHTML += `
-                <button onclick="addToCart('${p.name}', ${p.price}, ${JSON.stringify(p.recipe).replace(/"/g, '&quot;')})" 
-                    class="glass-card p-5 text-left border-b-4 border-slate-300 active:border-b-0 active:translate-y-1 transition-all">
-                    <p class="text-[9px] font-black text-indigo-500 uppercase mb-1">${p.name}</p>
-                    <p class="font-extrabold text-slate-800">${p.price.toLocaleString()}đ</p>
-                </button>`;
-            adminList.innerHTML += `
-                <div class="flex justify-between items-center p-3 bg-white/50 rounded-xl text-xs font-bold">
-                    <span>${p.name}</span>
-                    <button onclick="db.ref('products/${child.key}').remove()" class="text-red-400">Xóa</button>
-                </div>`;
-        });
-    });
-
-    function addToCart(name, price, recipe) {
-        cart.push({name, price, recipe});
-        renderCart();
-    }
-
-    function renderCart() {
-        const list = document.getElementById('cartItems');
-        const totalDisp = document.getElementById('totalPrice');
-        list.innerHTML = cart.length ? '' : '<p class="text-center text-slate-400 text-sm">Giỏ hàng đang trống</p>';
-        let total = 0;
-        cart.forEach((item, idx) => {
-            total += item.price;
-            list.innerHTML += `<div class="flex justify-between items-center text-sm font-bold">
-                <span class="text-slate-700">${item.name}</span>
-                <button onclick="cart.splice(${idx},1);renderCart()" class="text-red-300 font-normal">Gỡ</button>
-            </div>`;
-        });
-        totalDisp.innerText = total.toLocaleString() + 'đ';
-    }
-
-    function checkout() {
-        if(!cart.length) return;
-        cart.forEach(item => {
-            if(item.recipe) {
-                Object.keys(item.recipe).forEach(ing => {
-                    db.ref('inventory/' + ing).transaction(c => (c || 0) - item.recipe[ing]);
-                });
-            }
-        });
-        db.ref('orders').push({ total: cart.reduce((a,b)=>a+b.price,0), time: Date.now() });
-        alert("🎉 Đã xong! Kho đã tự động trừ.");
-        cart = []; renderCart();
-    }
-
-    // Inventory & Stats
-    db.ref('inventory').on('value', snap => {
-        const grid = document.getElementById('stockGrid');
-        grid.innerHTML = '';
-        snap.forEach(c => {
-            const low = c.val() < 500;
-            grid.innerHTML += `<div class="p-4 rounded-2xl bg-white/50 border ${low ? 'border-red-200 animate-pulse' : 'border-slate-100'}">
-                <p class="text-[8px] font-black text-slate-400 uppercase mb-1">${c.key}</p>
-                <p class="text-sm font-extrabold ${low ? 'text-red-500' : 'text-slate-800'}">${c.val().toLocaleString()}</p>
-            </div>`;
-        });
-    });
-
-    db.ref('orders').on('value', snap => {
-        let rev = 0; let count = 0;
-        snap.forEach(c => { rev += c.val().total; count++; });
-        document.getElementById('revVal').innerText = rev.toLocaleString() + 'đ';
-        document.getElementById('orderCount').innerText = count;
-    });
-
-    lucide.createIcons();
-</script>
+    </script>
 </body>
 </html>
