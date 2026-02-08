@@ -3,174 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CafeFlow Ultra ERP</title>
+    <title>CafeFlow Ultra ERP v2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
-        body { 
-            font-family: 'Quicksand', sans-serif; 
-            background-color: #0f172a; /* Slate 900 */
-            color: #f8fafc;
-        }
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .card-amber {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        }
+        body { font-family: 'Quicksand', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .card-amber { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
         .hover-scale { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .hover-scale:hover { transform: translateY(-5px); border-color: #f59e0b; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        input, select { background: rgba(15, 23, 42, 0.6) !important; color: white !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
     </style>
 </head>
 <body class="p-6 md:p-10">
 
-    <header class="max-w-6xl mx-auto flex justify-between items-end mb-12">
-        <div>
-            <p class="text-amber-500 font-bold tracking-[0.3em] text-[10px] uppercase mb-2">Hệ thống quản trị 2026</p>
-            <h1 class="text-4xl font-extrabold tracking-tighter">Cafe<span class="text-amber-500 font-light">Flow</span> <span class="text-slate-500 text-2xl">ERP</span></h1>
-        </div>
-        <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
-            <div class="text-right">
-                <p id="date-now">Chủ Nhật, 08 Tháng 2</p>
-                <p class="text-amber-500" id="time-now">16:30</p>
-            </div>
-            <div class="w-12 h-12 rounded-2xl glass-panel flex items-center justify-center border border-slate-700">
-                <i data-lucide="layout-grid" class="w-5 h-5"></i>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6">
-        
-        <div onclick="openModule('pos')" class="md:col-span-2 md:row-span-2 card-amber p-10 rounded-[3rem] shadow-2xl shadow-amber-900/20 flex flex-col justify-between cursor-pointer hover:brightness-110 transition-all group">
-            <div class="flex justify-between items-start">
-                <div class="w-16 h-16 bg-white/20 rounded-3xl flex items-center justify-center">
-                    <i data-lucide="shopping-cart" class="w-8 h-8 text-white"></i>
-                </div>
-                <i data-lucide="arrow-up-right" class="w-6 h-6 text-white/50 group-hover:text-white transition-all"></i>
-            </div>
+    <div id="hub-module" class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-end mb-12">
             <div>
-                <h2 class="text-4xl font-black text-white mb-2">POS</h2>
-                <p class="text-white/70 font-medium">Giao diện bán hàng trực quan, hỗ trợ thanh toán nhanh & in hóa đơn.</p>
+                <p class="text-amber-500 font-bold tracking-[0.3em] text-[10px] uppercase mb-2">Hệ thống quản trị 2026</p>
+                <h1 class="text-4xl font-extrabold tracking-tighter">Cafe<span class="text-amber-500 font-light">Flow</span> <span class="text-slate-500 text-2xl font-bold italic">ERP</span></h1>
             </div>
-        </div>
-
-        <div onclick="openModule('inventory')" class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between hover-scale cursor-pointer border-slate-800">
-            <i data-lucide="box" class="w-10 h-10 text-amber-500"></i>
-            <div>
-                <h3 class="text-xl font-bold mb-1">Kho Hàng</h3>
-                <p class="text-slate-500 text-xs">Quản lý định mức & nguyên liệu</p>
+            <div class="hidden md:flex flex-col text-right">
+                <p id="date-now" class="text-slate-400 text-sm font-bold">Chủ Nhật, 08/02</p>
+                <p id="time-now" class="text-amber-500 text-xl font-black">16:30</p>
             </div>
-        </div>
+        </header>
 
-        <div onclick="openModule('finance')" class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between hover-scale cursor-pointer border-slate-800">
-            <i data-lucide="bar-chart-3" class="w-10 h-10 text-emerald-400"></i>
-            <div>
-                <h3 class="text-xl font-bold mb-1">Tài Chính</h3>
-                <p class="text-slate-500 text-xs">Doanh thu, lợi nhuận & chi phí</p>
-            </div>
-        </div>
-
-        <div onclick="openModule('hrm')" class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between hover-scale cursor-pointer border-slate-800">
-            <i data-lucide="user-check" class="w-10 h-10 text-blue-400"></i>
-            <div>
-                <h3 class="text-xl font-bold mb-1">Nhân Sự</h3>
-                <p class="text-slate-500 text-xs">Chấm công & bảng lương</p>
-            </div>
-        </div>
-
-        <div onclick="openModule('ops')" class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between hover-scale cursor-pointer border-slate-800">
-            <i data-lucide="settings" class="w-10 h-10 text-purple-400"></i>
-            <div>
-                <h3 class="text-xl font-bold mb-1">Vận Hành</h3>
-                <p class="text-slate-500 text-xs">Thiết lập menu & hệ thống</p>
-            </div>
-        </div>
-<div id="pos-module" class="fixed inset-0 bg-[#0f172a] z-50 hidden flex-col animate-in slide-in-from-right duration-300">
-    <header class="p-6 border-b border-slate-800 flex justify-between items-center bg-[#1e293b]/50">
-        <button onclick="closeModule('pos')" class="flex items-center gap-2 text-slate-400 hover:text-white transition-all font-bold">
-            <i data-lucide="chevron-left"></i> TRANG CHỦ
-        </button>
-        <div class="text-center">
-            <h2 class="text-amber-500 font-black tracking-widest text-sm">TERMINAL 01</h2>
-            <p class="text-[10px] text-slate-500">NHÂN VIÊN: ADMIN</p>
-        </div>
-        <button onclick="clearCart()" class="text-[10px] font-bold text-rose-500 border border-rose-500/20 px-4 py-2 rounded-xl hover:bg-rose-500 hover:text-white transition-all">
-            HỦY ĐƠN
-        </button>
-    </header>
-
-    <div class="flex-1 flex overflow-hidden">
-        <div class="flex-[2] p-8 overflow-y-auto no-scrollbar space-y-8">
-            <div class="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-                <button class="px-8 py-3 bg-amber-500 text-slate-900 rounded-2xl font-bold text-xs">Tất cả</button>
-                <button class="px-8 py-3 glass-panel text-slate-400 rounded-2xl font-bold text-xs border border-slate-700">Cà phê</button>
-                <button class="px-8 py-3 glass-panel text-slate-400 rounded-2xl font-bold text-xs border border-slate-700">Trà sữa</button>
-            </div>
-
-            <div id="pos-product-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-6">
-                </div>
-        </div>
-
-        <div class="flex-1 bg-[#1e293b]/30 border-l border-slate-800 flex flex-col p-8 shadow-2xl">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="text-xl font-bold">Đơn hàng</h3>
-                <span id="cart-qty" class="bg-amber-500/10 text-amber-500 px-3 py-1 rounded-lg text-xs font-bold">0 món</span>
-            </div>
-
-            <div id="pos-cart-items" class="flex-1 overflow-y-auto space-y-4 no-scrollbar">
-                <div class="text-center py-20 text-slate-600">
-                    <i data-lucide="shopping-cart" class="w-12 h-12 mx-auto mb-4 opacity-20"></i>
-                    <p class="text-sm italic tracking-wide">Vui lòng chọn món...</p>
+        <main class="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6">
+            <div onclick="openModule('pos')" class="md:col-span-2 md:row-span-2 card-amber p-10 rounded-[3rem] shadow-2xl shadow-amber-900/20 flex flex-col justify-between cursor-pointer hover:brightness-110 transition-all group">
+                <i data-lucide="shopping-cart" class="w-16 h-16 text-white opacity-80"></i>
+                <div>
+                    <h2 class="text-4xl font-black text-white mb-2 italic underline underline-offset-8 decoration-white/20">POS</h2>
+                    <p class="text-white/70 font-medium">Giao diện bán hàng & In hóa đơn trực tuyến.</p>
                 </div>
             </div>
+            <div onclick="openModule('inventory')" class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between hover-scale cursor-pointer border-slate-800">
+                <i data-lucide="box" class="w-10 h-10 text-amber-500"></i>
+                <h3 class="text-xl font-bold">Kho Hàng</h3>
+            </div>
+            <div class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between opacity-50 cursor-not-allowed">
+                <i data-lucide="bar-chart-3" class="w-10 h-10 text-emerald-400"></i>
+                <h3 class="text-xl font-bold">Tài Chính</h3>
+            </div>
+            <div class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between opacity-50 cursor-not-allowed">
+                <i data-lucide="user-check" class="w-10 h-10 text-blue-400"></i>
+                <h3 class="text-xl font-bold">Nhân Sự</h3>
+            </div>
+            <div onclick="openModule('ops')" class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between hover-scale cursor-pointer border-slate-800">
+                <i data-lucide="settings" class="w-10 h-10 text-purple-400"></i>
+                <h3 class="text-xl font-bold">Vận Hành</h3>
+            </div>
+        </main>
+    </div>
 
-            <div class="mt-8 pt-8 border-t border-slate-700 space-y-6">
-                <div class="space-y-2">
-                    <div class="flex justify-between text-slate-400 font-medium">
-                        <span>Tạm tính</span>
-                        <span id="pos-subtotal">0đ</span>
-                    </div>
-                    <div class="flex justify-between text-2xl font-black text-white italic">
-                        <span>TỔNG CỘNG</span>
-                        <span id="pos-total" class="text-amber-500">0đ</span>
-                    </div>
+    <div id="pos-module" class="fixed inset-0 bg-[#0f172a] z-50 hidden flex flex-col animate-in slide-in-from-right">
+        <header class="p-6 border-b border-slate-800 flex justify-between items-center glass-panel">
+            <button onclick="closeModule('pos')" class="font-bold text-slate-400 flex items-center gap-2"><i data-lucide="chevron-left"></i> HUB</button>
+            <h2 class="font-black text-amber-500 italic">TERMINAL POS</h2>
+            <button onclick="clearCart()" class="text-xs text-rose-500 font-bold uppercase">Hủy giỏ</button>
+        </header>
+        <div class="flex-1 flex overflow-hidden">
+            <div id="pos-menu" class="flex-[2] p-8 grid grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto no-scrollbar"></div>
+            <div class="flex-1 glass-panel border-l border-slate-800 p-8 flex flex-col">
+                <h3 class="text-xl font-black mb-6">Đơn Hàng</h3>
+                <div id="cart-list" class="flex-1 space-y-4 overflow-y-auto no-scrollbar"></div>
+                <div class="pt-6 border-t border-slate-700 mt-6 space-y-4">
+                    <div class="flex justify-between text-2xl font-black italic"><span>TỔNG:</span><span id="pos-total" class="text-amber-500 text-3xl">0đ</span></div>
+                    <button onclick="checkout()" class="w-full card-amber py-6 rounded-3xl font-black text-slate-900 shadow-xl shadow-amber-900/40">THANH TOÁN</button>
                 </div>
-                
-                <button onclick="handleCheckout()" class="w-full card-amber py-6 rounded-[2rem] text-slate-900 font-black text-lg shadow-xl shadow-amber-900/40 active:scale-95 transition-all flex items-center justify-center gap-3">
-                    XÁC NHẬN THANH TOÁN <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                </button>
             </div>
         </div>
     </div>
-</div>
-    </main>
 
-    <footer class="max-w-6xl mx-auto mt-12 flex justify-between items-center text-slate-600">
-        <div class="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
-            <span>Server: Asia-East</span>
-            <span class="text-green-500">● Online</span>
+    <div id="inventory-module" class="fixed inset-0 bg-[#0f172a] z-50 hidden flex flex-col animate-in zoom-in">
+        <header class="p-6 border-b border-slate-800 flex justify-between items-center glass-panel">
+            <button onclick="closeModule('inventory')" class="font-bold text-slate-400 flex items-center gap-2"><i data-lucide="chevron-left"></i> HUB</button>
+            <h2 class="font-black text-amber-500 italic">QUẢN LÝ TỒN KHO</h2>
+            <span></span>
+        </header>
+        <div class="p-8 max-w-5xl mx-auto w-full overflow-y-auto no-scrollbar">
+            <div class="glass-panel rounded-[2rem] overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-800/50 text-slate-500 text-[10px] font-black uppercase"><tr class="border-b border-slate-700"><th class="p-6">Nguyên liệu</th><th class="p-6">Tồn kho</th><th class="p-6">Đơn vị</th><th class="p-6">Trạng thái</th></tr></thead>
+                    <tbody id="inventory-table" class="text-sm"></tbody>
+                </table>
+            </div>
         </div>
-        <p class="text-[10px]">© 2026 CafeFlow. Powered by Gemini Tech.</p>
-    </footer>
+    </div>
+
+    <div id="ops-module" class="fixed inset-0 bg-[#0f172a] z-50 hidden flex flex-col animate-in slide-in-from-bottom">
+        <header class="p-6 border-b border-slate-800 flex justify-between items-center glass-panel">
+            <button onclick="closeModule('ops')" class="font-bold text-slate-400 flex items-center gap-2"><i data-lucide="chevron-left"></i> HUB</button>
+            <h2 class="font-black text-purple-400 italic tracking-widest">HỆ THỐNG VẬN HÀNH</h2>
+            <span></span>
+        </header>
+        <div class="p-8 max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto no-scrollbar">
+            <div class="glass-panel p-8 rounded-[2.5rem] space-y-4">
+                <h3 class="text-xl font-black mb-4 flex items-center gap-2"><i data-lucide="plus-circle" class="text-purple-400"></i> Thêm Món Mới</h3>
+                <input type="text" id="new-p-name" placeholder="Tên món (VD: Bạc Xỉu)" class="w-full p-4 rounded-2xl outline-none">
+                <input type="number" id="new-p-price" placeholder="Giá bán (VNĐ)" class="w-full p-4 rounded-2xl outline-none">
+                <button onclick="addProduct()" class="w-full bg-purple-600 py-4 rounded-2xl font-black shadow-lg shadow-purple-900/30">CẬP NHẬT MENU</button>
+            </div>
+            <div class="glass-panel p-8 rounded-[2.5rem] space-y-4">
+                <h3 class="text-xl font-black mb-4">Danh Sách Menu</h3>
+                <div id="ops-menu-list" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        lucide.createIcons();
+        // --- 1. FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0Lb8SoZN5AV4XmGp_S4lr5MfejRbpLBo",
+            authDomain: "cafeflow-c15b2.firebaseapp.com",
+            databaseURL: "https://cafeflow-c15b2-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "cafeflow-c15b2"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        // Cập nhật giờ thời gian thực
+        // --- 2. LOGIC ĐIỀU KHIỂN CHUNG ---
+        function openModule(name) {
+            document.getElementById(name + '-module').classList.remove('hidden');
+            if(name === 'inventory') renderInventory();
+            if(name === 'ops') renderOpsMenu();
+        }
+        function closeModule(name) { document.getElementById(name + '-module').classList.add('hidden'); }
+
+        // --- 3. LOGIC POS ---
+        let cart = [];
+        db.ref('products').on('value', snap => {
+            const menu = document.getElementById('pos-menu');
+            menu.innerHTML = '';
+            snap.forEach(c => {
+                const p = c.val();
+                menu.innerHTML += `<div onclick="addToCart('${c.key}', '${p.name}', ${p.price})" class="glass-panel p-6 rounded-[2rem] hover:border-amber-500 transition-all cursor-pointer group">
+                    <i data-lucide="coffee" class="w-8 h-8 text-amber-500 mb-4"></i>
+                    <h4 class="font-bold">${p.name}</h4><p class="text-slate-500 text-sm">${p.price.toLocaleString()}đ</p>
+                </div>`;
+            });
+            lucide.createIcons();
+        });
+
+        function addToCart(id, name, price) {
+            const item = cart.find(x => x.id === id);
+            if(item) item.qty++; else cart.push({id, name, price, qty: 1});
+            updateCart();
+        }
+
+        function updateCart() {
+            const list = document.getElementById('cart-list');
+            list.innerHTML = cart.map((i, idx) => `<div class="flex justify-between items-center glass-panel p-4 rounded-2xl">
+                <div><p class="font-bold text-xs">${i.name}</p><p class="text-[10px] text-amber-500 font-bold">${i.qty} x ${i.price.toLocaleString()}đ</p></div>
+                <button onclick="cart.splice(${idx},1);updateCart()" class="text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>`).join('');
+            const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            document.getElementById('pos-total').innerText = total.toLocaleString() + 'đ';
+            lucide.createIcons();
+        }
+
+        function checkout() {
+            if(!cart.length) return;
+            db.ref('orders').push({ items: cart, total: cart.reduce((s,i)=>s+(i.price*i.qty),0), time: Date.now() });
+            alert("🚀 Thanh toán hoàn tất!"); cart = []; updateCart();
+        }
+
+        // --- 4. LOGIC KHO ---
+        function renderInventory() {
+            db.ref('inventory').on('value', snap => {
+                const body = document.getElementById('inventory-table');
+                body.innerHTML = '';
+                snap.forEach(c => {
+                    const inv = c.val();
+                    body.innerHTML += `<tr class="border-t border-slate-800"><td class="p-6 font-bold">${c.key}</td><td class="p-6 text-amber-500">${inv.toLocaleString()}</td><td class="p-6 text-slate-500">gram/ml</td><td class="p-6"><span class="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[10px] font-black uppercase tracking-widest">Ổn định</span></td></tr>`;
+                });
+            });
+        }
+
+        // --- 5. LOGIC VẬN HÀNH (ADMIN) ---
+        function addProduct() {
+            const name = document.getElementById('new-p-name').value;
+            const price = parseInt(document.getElementById('new-p-price').value);
+            if(name && price) {
+                db.ref('products').push({ name, price });
+                document.getElementById('new-p-name').value = '';
+                document.getElementById('new-p-price').value = '';
+                alert("Đã thêm món vào Menu!");
+            }
+        }
+
+        function renderOpsMenu() {
+            db.ref('products').on('value', snap => {
+                const list = document.getElementById('ops-menu-list');
+                list.innerHTML = '';
+                snap.forEach(c => {
+                    list.innerHTML += `<div class="flex justify-between p-4 glass-panel rounded-2xl mb-2 text-xs font-bold items-center">
+                        <span>${c.val().name} - ${c.val().price.toLocaleString()}đ</span>
+                        <button onclick="db.ref('products/${c.key}').remove()" class="text-rose-500">XÓA</button>
+                    </div>`;
+                });
+            });
+        }
+
+        // Time Clock
         setInterval(() => {
             const now = new Date();
-            document.getElementById('time-now').innerText = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('time-now').innerText = now.toLocaleTimeString();
         }, 1000);
-
-        function openModule(name) {
-            console.log("Navigating to:", name);
-            // Chúng ta sẽ viết hàm ẩn giao diện này và hiện giao diện module tương ứng tại đây
-            alert("Đang chuyển hướng đến Module: " + name.toUpperCase());
-        }
+        lucide.createIcons();
     </script>
 </body>
 </html>
