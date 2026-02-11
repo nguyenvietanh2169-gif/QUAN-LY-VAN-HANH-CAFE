@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CafeFlow Ultra ERP v4.0</title>
+    <title>CafeFlow Enterprise v4.0 - Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
@@ -11,106 +11,182 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
         body { font-family: 'Quicksand', sans-serif; background-color: #0f172a; color: #f8fafc; overflow: hidden; }
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .card-amber { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .amber-gradient { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        input, select { background: rgba(15, 23, 42, 0.8) !important; color: white !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; padding: 12px 16px !important; border-radius: 12px !important; outline: none; }
+        input, select { background: #1e293b !important; color: white !important; border: 1px solid #334155 !important; padding: 12px !important; border-radius: 12px !important; width: 100%; outline: none; }
+        input:focus { border-color: #f59e0b !important; }
+        .active-tab { background: #f59e0b !important; color: #0f172a !important; font-weight: 800; }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body>
 
-    <div id="hub-module" class="max-w-6xl mx-auto animate-in fade-in duration-500">
+    <div id="hub-module" class="max-w-6xl mx-auto p-6 md:p-10 min-h-screen flex flex-col justify-center">
         <header class="flex justify-between items-end mb-12">
             <div>
                 <p class="text-amber-500 font-bold tracking-[0.3em] text-[10px] uppercase mb-2">Hệ thống quản trị 2026</p>
-                <h1 class="text-4xl font-extrabold tracking-tighter italic">Cafe<span class="text-amber-500 font-light">Flow</span> ERP</h1>
+                <h1 class="text-5xl font-black italic tracking-tighter">Cafe<span class="text-amber-500 font-light text-4xl">Flow</span></h1>
             </div>
             <div class="text-right">
-                <p id="date-now" class="text-slate-400 text-sm font-bold"></p>
-                <p id="time-now" class="text-amber-500 text-xl font-black"></p>
+                <p id="hub-date" class="text-slate-500 font-bold text-sm"></p>
+                <p id="hub-time" class="text-amber-500 text-2xl font-black italic tracking-widest"></p>
             </div>
         </header>
 
-        <main class="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 h-[500px]">
-            <div onclick="openModule('pos')" class="md:col-span-2 md:row-span-2 card-amber p-10 rounded-[3rem] shadow-2xl flex flex-col justify-between cursor-pointer hover:scale-[1.02] transition-all">
-                <i data-lucide="shopping-cart" class="w-16 h-16 text-white opacity-80"></i>
-                <h2 class="text-4xl font-black text-white italic">POS SYSTEM</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 h-[500px]">
+            <div onclick="switchModule('pos')" class="md:col-span-2 md:row-span-2 amber-gradient p-10 rounded-[3rem] shadow-2xl flex flex-col justify-between cursor-pointer hover:scale-[1.01] transition-all">
+                <i data-lucide="shopping-cart" class="w-16 h-16 text-white"></i>
+                <h2 class="text-4xl font-black text-white italic">BÁN HÀNG (POS)</h2>
             </div>
-            <div onclick="openModule('inventory')" class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between hover:border-amber-500 transition-all cursor-pointer">
+            <div onclick="switchModule('inventory')" class="glass p-8 rounded-[2.5rem] flex flex-col justify-between hover:border-amber-500 cursor-pointer transition-all">
                 <i data-lucide="box" class="w-10 h-10 text-amber-500"></i>
-                <h3 class="text-xl font-bold">Kho Hàng</h3>
+                <h3 class="text-xl font-bold">KHO HÀNG</h3>
             </div>
-            <div onclick="openModule('finance')" class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between hover:border-emerald-500 transition-all cursor-pointer">
-                <i data-lucide="bar-chart-3" class="w-10 h-10 text-emerald-400"></i>
-                <h3 class="text-xl font-bold">Tài Chính</h3>
+            <div onclick="switchModule('finance')" class="glass p-8 rounded-[2.5rem] flex flex-col justify-between hover:border-emerald-500 cursor-pointer transition-all">
+                <i data-lucide="line-chart" class="w-10 h-10 text-emerald-500"></i>
+                <h3 class="text-xl font-bold">TÀI CHÍNH</h3>
             </div>
-            <div onclick="openModule('hrm')" class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between hover:border-blue-500 transition-all cursor-pointer">
-                <i data-lucide="user-check" class="w-10 h-10 text-blue-400"></i>
-                <h3 class="text-xl font-bold">Nhân Sự</h3>
+            <div onclick="switchModule('hrm')" class="glass p-8 rounded-[2.5rem] flex flex-col justify-between hover:border-blue-500 cursor-pointer transition-all">
+                <i data-lucide="users" class="w-10 h-10 text-blue-500"></i>
+                <h3 class="text-xl font-bold">NHÂN SỰ</h3>
             </div>
-            <div onclick="openModule('ops')" class="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between hover:border-purple-500 transition-all cursor-pointer">
-                <i data-lucide="settings" class="w-10 h-10 text-purple-400"></i>
-                <h3 class="text-xl font-bold">Vận Hành</h3>
-            </div>
-        </main>
-    </div>
-
-    <div id="finance-module" class="fixed inset-0 bg-[#0f172a] z-50 hidden flex flex-col animate-in zoom-in">
-        <header class="p-6 border-b border-slate-800 flex justify-between items-center glass-panel">
-            <button onclick="closeModule('finance')" class="font-bold text-slate-400 flex items-center gap-2"><i data-lucide="chevron-left"></i> HUB</button>
-            <h2 class="font-black text-emerald-400 italic">BÁO CÁO TÀI CHÍNH</h2>
-            <span></span>
-        </header>
-        <div class="p-8 max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="glass-panel p-8 rounded-[2rem] border-b-4 border-emerald-500">
-                <p class="text-xs font-bold text-slate-500 uppercase">Doanh thu hôm nay</p>
-                <h3 id="finance-today" class="text-3xl font-black mt-2">0đ</h3>
-            </div>
-            <div class="glass-panel p-8 rounded-[2rem] border-b-4 border-blue-500">
-                <p class="text-xs font-bold text-slate-500 uppercase">Tổng đơn hàng</p>
-                <h3 id="finance-orders" class="text-3xl font-black mt-2">0</h3>
-            </div>
-            <div class="glass-panel p-8 rounded-[2rem] border-b-4 border-amber-500">
-                <p class="text-xs font-bold text-slate-500 uppercase">Lợi nhuận ước tính (70%)</p>
-                <h3 id="finance-profit" class="text-3xl font-black mt-2 text-amber-500">0đ</h3>
-            </div>
-            <div class="md:col-span-3 glass-panel rounded-[2rem] overflow-hidden">
-                <h4 class="p-6 font-bold border-b border-slate-800">Lịch sử giao dịch gần đây</h4>
-                <div id="finance-history" class="max-h-[300px] overflow-y-auto"></div>
+            <div onclick="switchModule('ops')" class="glass p-8 rounded-[2.5rem] flex flex-col justify-between hover:border-purple-500 cursor-pointer transition-all">
+                <i data-lucide="settings" class="w-10 h-10 text-purple-500"></i>
+                <h3 class="text-xl font-bold">VẬN HÀNH</h3>
             </div>
         </div>
     </div>
 
-    <div id="hrm-module" class="fixed inset-0 bg-[#0f172a] z-50 hidden flex flex-col animate-in slide-in-from-top">
-        <header class="p-6 border-b border-slate-800 flex justify-between items-center glass-panel">
-            <button onclick="closeModule('hrm')" class="font-bold text-slate-400 flex items-center gap-2"><i data-lucide="chevron-left"></i> HUB</button>
-            <h2 class="font-black text-blue-400 italic">QUẢN TRỊ NHÂN SỰ</h2>
+    <div id="pos-module" class="fixed inset-0 bg-[#0f172a] hidden flex-col z-50">
+        <header class="p-4 border-b border-slate-800 flex justify-between items-center glass">
+            <button onclick="switchModule('hub')" class="flex items-center gap-2 font-bold text-slate-400"><i data-lucide="arrow-left"></i> HUB</button>
+            <div class="flex gap-2" id="pos-category-tabs">
+                <button onclick="filterPOS('all')" class="pos-tab active-tab px-6 py-2 rounded-xl text-[10px] uppercase">Tất cả</button>
+                <button onclick="filterPOS('Cafe')" class="pos-tab px-6 py-2 rounded-xl text-[10px] uppercase font-bold text-slate-500">Cà phê</button>
+                <button onclick="filterPOS('Trà')" class="pos-tab px-6 py-2 rounded-xl text-[10px] uppercase font-bold text-slate-500">Trà sữa</button>
+            </div>
+            <div class="text-rose-500 font-bold text-xs cursor-pointer" onclick="cart=[] ; updateCartUI()">HỦY ĐƠN</div>
+        </header>
+        <div class="flex-1 flex overflow-hidden">
+            <div id="pos-grid" class="flex-[2.5] p-8 grid grid-cols-2 lg:grid-cols-4 gap-4 overflow-y-auto no-scrollbar content-start"></div>
+            <div class="flex-1 glass border-l border-slate-800 p-6 flex flex-col shadow-2xl">
+                <h3 class="text-xl font-black mb-6">GIỎ HÀNG</h3>
+                <div id="cart-items" class="flex-1 space-y-3 overflow-y-auto no-scrollbar"></div>
+                <div class="pt-6 border-t border-slate-700 mt-4 space-y-4">
+                    <div class="flex justify-between text-3xl font-black italic"><span class="text-slate-500">TỔNG:</span><span id="cart-total" class="text-amber-500">0đ</span></div>
+                    <button onclick="checkout()" class="w-full amber-gradient py-6 rounded-[2rem] font-black text-slate-900 shadow-xl hover:scale-[1.02] transition-all">THANH TOÁN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="inventory-module" class="fixed inset-0 bg-[#0f172a] hidden flex-col z-50">
+        <header class="p-6 border-b border-slate-800 flex justify-between items-center glass">
+            <button onclick="switchModule('hub')" class="font-bold text-slate-400"><i data-lucide="arrow-left"></i> HUB</button>
+            <h2 class="font-black text-amber-500 tracking-widest">HỆ THỐNG KHO</h2>
             <span></span>
         </header>
-        <div class="p-8 max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="glass-panel p-8 rounded-[2.5rem] space-y-4 h-fit">
-                <h3 class="text-xl font-black mb-4 flex items-center gap-2"><i data-lucide="user-plus" class="text-blue-400"></i> Tuyển dụng</h3>
-                <input type="text" id="hr-name" placeholder="Họ tên nhân viên" class="w-full">
-                <input type="text" id="hr-role" placeholder="Vị trí (Pha chế/Phục vụ)" class="w-full">
-                <button onclick="addStaff()" class="w-full bg-blue-600 py-4 rounded-xl font-black">THÊM NHÂN VIÊN</button>
-            </div>
-            <div class="md:col-span-2 glass-panel rounded-[2.5rem] overflow-hidden">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-800/50 text-slate-500 text-[10px] font-black uppercase">
-                        <tr><th class="p-6">Nhân viên</th><th class="p-6">Vị trí</th><th class="p-6">Trạng thái</th><th class="p-6">Hành động</th></tr>
+        <div class="p-10 max-w-5xl mx-auto w-full overflow-y-auto no-scrollbar">
+            <div class="glass rounded-[2rem] overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-800/50 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <tr><th class="p-6">Nguyên liệu</th><th class="p-6 text-center">Tồn kho</th><th class="p-6">Đơn vị</th><th class="p-6">Cảnh báo</th></tr>
                     </thead>
-                    <tbody id="hrm-table" class="text-sm"></tbody>
+                    <tbody id="inventory-list"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <div id="pos-module" class="fixed inset-0 bg-[#0f172a] z-50 hidden flex-col">...</div>
-    <div id="inventory-module" class="fixed inset-0 bg-[#0f172a] z-50 hidden flex-col">...</div>
-    <div id="ops-module" class="fixed inset-0 bg-[#0f172a] z-50 hidden flex-col">...</div>
+    <div id="finance-module" class="fixed inset-0 bg-[#0f172a] hidden flex-col z-50">
+        <header class="p-6 border-b border-slate-800 flex justify-between items-center glass">
+            <button onclick="switchModule('hub')" class="font-bold text-slate-400"><i data-lucide="arrow-left"></i> HUB</button>
+            <h2 class="font-black text-emerald-500 italic">BÁO CÁO DOANH THU</h2>
+            <span></span>
+        </header>
+        <div class="p-10 max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto no-scrollbar">
+            <div class="glass p-8 rounded-[2rem] border-l-4 border-emerald-500">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Doanh thu tổng</p>
+                <h3 id="fin-revenue" class="text-3xl font-black mt-1">0đ</h3>
+            </div>
+            <div class="glass p-8 rounded-[2rem] border-l-4 border-blue-500">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Tổng số hóa đơn</p>
+                <h3 id="fin-orders" class="text-3xl font-black mt-1">0</h3>
+            </div>
+            <div class="glass p-8 rounded-[2rem] border-l-4 border-rose-500">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Chi phí ước tính</p>
+                <h3 id="fin-cost" class="text-3xl font-black mt-1">0đ</h3>
+            </div>
+            <div class="md:col-span-3 glass rounded-[2.5rem] p-6 h-[400px] overflow-y-auto">
+                <h4 class="font-black text-slate-400 mb-6 uppercase text-xs">Lịch sử giao dịch chi tiết</h4>
+                <div id="fin-history" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="hrm-module" class="fixed inset-0 bg-[#0f172a] hidden flex-col z-50">
+        <header class="p-6 border-b border-slate-800 flex justify-between items-center glass">
+            <button onclick="switchModule('hub')" class="font-bold text-slate-400"><i data-lucide="arrow-left"></i> HUB</button>
+            <h2 class="font-black text-blue-500 italic uppercase">Quản lý nhân sự</h2>
+            <span></span>
+        </header>
+        <div class="p-10 max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-8 overflow-y-auto no-scrollbar">
+            <div class="glass p-8 rounded-[2.5rem] space-y-4">
+                <h3 class="text-xl font-black mb-4">Tuyển dụng</h3>
+                <input type="text" id="hr-input-name" placeholder="Họ tên nhân viên">
+                <input type="text" id="hr-input-role" placeholder="Vị trí (Pha chế, v.v.)">
+                <button onclick="addStaff()" class="w-full bg-blue-600 py-4 rounded-xl font-black">XÁC NHẬN THÊM</button>
+            </div>
+            <div class="md:col-span-2 glass rounded-[2.5rem] overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-800/50 text-[10px] font-black text-slate-500 uppercase">
+                        <tr><th class="p-6">Nhân viên</th><th class="p-6">Vị trí</th><th class="p-6">Trạng thái</th><th class="p-6 text-right">#</th></tr>
+                    </thead>
+                    <tbody id="hr-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="ops-module" class="fixed inset-0 bg-[#0f172a] hidden flex-col z-50">
+        <header class="p-6 border-b border-slate-800 flex justify-between items-center glass">
+            <button onclick="switchModule('hub')" class="font-bold text-slate-400"><i data-lucide="arrow-left"></i> HUB</button>
+            <h2 class="font-black text-purple-500 uppercase">Cấu hình hệ thống</h2>
+            <span></span>
+        </header>
+        <div class="p-10 max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto no-scrollbar">
+            <div class="glass p-8 rounded-[3rem] space-y-4">
+                <h3 class="text-xl font-black mb-2 text-purple-400 uppercase italic">Thêm món ăn</h3>
+                <input type="text" id="ops-p-name" placeholder="Tên món">
+                <input type="number" id="ops-p-price" placeholder="Giá bán (VNĐ)">
+                <select id="ops-p-cate"><option value="Cafe">Cà phê</option><option value="Trà">Trà sữa</option><option value="Bánh">Đồ ăn</option></select>
+                <button onclick="addMenuProduct()" class="w-full bg-purple-600 py-4 rounded-xl font-black">CẬP NHẬT POS</button>
+                <div id="ops-menu-preview" class="space-y-2 mt-6"></div>
+            </div>
+            <div class="glass p-8 rounded-[3rem] space-y-4">
+                <h3 class="text-xl font-black mb-2 text-amber-500 uppercase italic">Nhập kho nguyên liệu</h3>
+                <input type="text" id="ops-s-name" placeholder="Tên nguyên liệu">
+                <input type="number" id="ops-s-qty" placeholder="Số lượng (Gram/Ml)">
+                <button onclick="addInventoryItem()" class="w-full bg-amber-600 py-4 rounded-xl font-black">CẬP NHẬT KHO</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="checkout-modal" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-6 backdrop-blur-md">
+        <div class="glass bg-white text-slate-900 w-full max-w-sm rounded-[3rem] p-8 text-center animate-in zoom-in duration-300">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="check" class="w-8 h-8"></i></div>
+            <h2 class="text-2xl font-black mb-2 italic">Thanh toán hoàn tất</h2>
+            <p id="qr-id" class="text-slate-400 text-xs font-bold mb-6">Mã đơn: #CF-1234</p>
+            <div class="bg-slate-100 p-4 rounded-3xl inline-block mb-6">
+                <img id="qr-img" src="" alt="QR" class="w-40 h-40">
+                <p class="text-[8px] font-black text-slate-400 mt-2 uppercase">Quét mã để trả tiền</p>
+            </div>
+            <button onclick="confirmOrder()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black">XÁC NHẬN & ĐÓNG</button>
+        </div>
+    </div>
 
     <script>
-        // Copy lại config Firebase của bạn vào đây
+        // --- 1. CONFIG FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyD0Lb8SoZN5AV4XmGp_S4lr5MfejRbpLBo",
             authDomain: "cafeflow-c15b2.firebaseapp.com",
@@ -120,90 +196,205 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // ĐIỀU KHIỂN CHUNG
-        function openModule(name) {
+        // --- 2. GLOBAL STATE ---
+        let cart = [];
+        let currentOrderData = null;
+
+        // --- 3. CORE FUNCTIONS ---
+        function switchModule(name) {
+            document.getElementById('hub-module').classList.add('hidden');
             document.querySelectorAll('[id$="-module"]').forEach(m => m.classList.add('hidden'));
-            document.getElementById(name + '-module').classList.remove('hidden');
-            if(name === 'finance') renderFinance();
-            if(name === 'hrm') renderHRM();
-            // Gọi lại render cho các module cũ
-            if(name === 'pos') filterMenu('all');
-            if(name === 'inventory') renderInventory();
-            if(name === 'ops') renderOpsMenu();
-        }
-        function closeModule(name) { 
-            document.getElementById(name + '-module').classList.add('hidden');
-            document.getElementById('hub-module').classList.remove('hidden');
+            
+            if(name === 'hub') {
+                document.getElementById('hub-module').classList.remove('hidden');
+            } else {
+                document.getElementById(name + '-module').classList.remove('hidden');
+                initModule(name);
+            }
         }
 
-        // ==========================================
-        // LOGIC TÀI CHÍNH (KẾT NỐI VỚI ORDERS)
-        // ==========================================
-        function renderFinance() {
-            db.ref('orders').on('value', snap => {
-                let totalToday = 0;
-                let orderCount = 0;
-                let historyHTML = '';
-                
+        function initModule(name) {
+            if(name === 'pos') filterPOS('all');
+            if(name === 'inventory') renderInventory();
+            if(name === 'finance') renderFinance();
+            if(name === 'hrm') renderHRM();
+            if(name === 'ops') renderOps();
+        }
+
+        // --- 4. POS LOGIC ---
+        function filterPOS(cate) {
+            document.querySelectorAll('.pos-tab').forEach(t => t.classList.remove('active-tab'));
+            event?.target?.classList?.add('active-tab');
+            
+            db.ref('products').once('value', snap => {
+                const grid = document.getElementById('pos-grid');
+                grid.innerHTML = '';
                 snap.forEach(c => {
-                    const order = c.val();
-                    totalToday += order.total;
-                    orderCount++;
-                    historyHTML = `
-                        <div class="p-4 border-b border-slate-800 flex justify-between items-center text-xs">
-                            <div>
-                                <p class="font-bold text-slate-200">Đơn #${order.billId || 'BS'}</p>
-                                <p class="text-slate-500">${new Date(order.time).toLocaleTimeString()}</p>
-                            </div>
-                            <span class="text-emerald-500 font-black">+${order.total.toLocaleString()}đ</span>
-                        </div>
-                    ` + historyHTML;
+                    const p = c.val();
+                    if(cate === 'all' || p.cate === cate) {
+                        grid.innerHTML += `
+                            <div onclick="addToCart('${c.key}', '${p.name}', ${p.price})" class="glass p-6 rounded-[2.5rem] hover:border-amber-500 cursor-pointer transition-all animate-in fade-in zoom-in">
+                                <h4 class="font-bold text-sm mb-1">${p.name}</h4>
+                                <p class="text-amber-500 font-black text-xs">${p.price.toLocaleString()}đ</p>
+                            </div>`;
+                    }
                 });
-                
-                document.getElementById('finance-today').innerText = totalToday.toLocaleString() + 'đ';
-                document.getElementById('finance-orders').innerText = orderCount;
-                document.getElementById('finance-profit').innerText = (totalToday * 0.7).toLocaleString() + 'đ';
-                document.getElementById('finance-history').innerHTML = historyHTML;
             });
         }
 
-        // ==========================================
-        // LOGIC NHÂN SỰ (HRM)
-        // ==========================================
+        function addToCart(id, name, price) {
+            const item = cart.find(x => x.id === id);
+            if(item) item.qty++; else cart.push({id, name, price, qty: 1});
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const list = document.getElementById('cart-items');
+            list.innerHTML = cart.map((i, idx) => `
+                <div class="glass p-4 rounded-2xl flex justify-between items-center">
+                    <div><p class="font-bold text-xs">${i.name}</p><p class="text-amber-500 font-bold text-[10px]">${(i.price*i.qty).toLocaleString()}đ</p></div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeQty(${idx}, -1)" class="w-6 h-6 bg-slate-800 rounded">-</button>
+                        <span class="text-xs font-bold w-4 text-center">${i.qty}</span>
+                        <button onclick="changeQty(${idx}, 1)" class="w-6 h-6 bg-slate-800 rounded">+</button>
+                    </div>
+                </div>`).join('');
+            const total = cart.reduce((s,i) => s + (i.price*i.qty), 0);
+            document.getElementById('cart-total').innerText = total.toLocaleString() + 'đ';
+        }
+
+        function changeQty(idx, delta) {
+            cart[idx].qty += delta;
+            if(cart[idx].qty <= 0) cart.splice(idx, 1);
+            updateCartUI();
+        }
+
+        function checkout() {
+            if(!cart.length) return;
+            const orderId = "CF-" + Math.floor(Math.random()*90000);
+            const total = cart.reduce((s,i) => s + (i.price*i.qty), 0);
+            currentOrderData = { orderId, total, items: cart, time: Date.now() };
+            
+            document.getElementById('qr-id').innerText = "Mã đơn: #" + orderId;
+            document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PAY_CF_${orderId}_AMT_${total}`;
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        }
+
+        async function confirmOrder() {
+            // 1. Lưu đơn hàng
+            await db.ref('orders').push(currentOrderData);
+            
+            // 2. Tự động trừ kho (Giả định mỗi món trừ 20 đơn vị nguyên liệu chính)
+            const snapshot = await db.ref('inventory').once('value');
+            const stock = snapshot.val() || {};
+            if(stock['Cốt Cafe']) {
+                const totalUsage = cart.reduce((s, i) => s + (i.qty * 20), 0);
+                db.ref('inventory/Cốt Cafe').set(stock['Cốt Cafe'] - totalUsage);
+            }
+
+            document.getElementById('checkout-modal').classList.add('hidden');
+            cart = []; updateCartUI(); alert("Xác nhận hoàn tất!");
+        }
+
+        // --- 5. FINANCE LOGIC ---
+        function renderFinance() {
+            db.ref('orders').on('value', snap => {
+                let rev = 0, count = 0, history = '';
+                snap.forEach(c => {
+                    const o = c.val();
+                    rev += o.total; count++;
+                    history = `<div class="p-4 glass rounded-xl flex justify-between items-center text-[10px]">
+                        <div><p class="font-black">#${o.orderId}</p><p class="text-slate-500">${new Date(o.time).toLocaleTimeString()}</p></div>
+                        <span class="text-emerald-500 font-black">+${o.total.toLocaleString()}đ</span>
+                    </div>` + history;
+                });
+                document.getElementById('fin-revenue').innerText = rev.toLocaleString() + 'đ';
+                document.getElementById('fin-orders').innerText = count;
+                document.getElementById('fin-cost').innerText = (rev * 0.3).toLocaleString() + 'đ';
+                document.getElementById('fin-history').innerHTML = history;
+            });
+        }
+
+        // --- 6. HRM LOGIC ---
         function addStaff() {
-            const name = document.getElementById('hr-name').value;
-            const role = document.getElementById('hr-role').value;
+            const name = document.getElementById('hr-input-name').value;
+            const role = document.getElementById('hr-input-role').value;
             if(name && role) {
-                db.ref('staff').push({ name, role, status: 'Online', joinDate: Date.now() });
-                document.getElementById('hr-name').value = '';
-                document.getElementById('hr-role').value = '';
+                db.ref('staff').push({ name, role, status: 'Active' });
+                document.getElementById('hr-input-name').value = '';
+                document.getElementById('hr-input-role').value = '';
             }
         }
 
         function renderHRM() {
             db.ref('staff').on('value', snap => {
-                const tbody = document.getElementById('hrm-table');
-                tbody.innerHTML = '';
+                const list = document.getElementById('hr-list');
+                list.innerHTML = '';
                 snap.forEach(c => {
                     const s = c.val();
-                    tbody.innerHTML += `
-                        <tr class="border-t border-slate-800">
-                            <td class="p-6 font-bold">${s.name}</td>
-                            <td class="p-6 text-slate-400">${s.role}</td>
-                            <td class="p-6"><span class="text-emerald-500 text-[10px] font-bold uppercase">● ${s.status}</span></td>
-                            <td class="p-6"><button onclick="db.ref('staff/${c.key}').remove()" class="text-rose-500 hover:scale-110 transition-all"><i data-lucide="trash"></i></button></td>
-                        </tr>
-                    `;
+                    list.innerHTML += `<tr class="border-t border-slate-800">
+                        <td class="p-6 font-bold text-xs">${s.name}</td>
+                        <td class="p-6 text-slate-500 text-xs">${s.role}</td>
+                        <td class="p-6"><span class="text-emerald-500 font-black text-[8px] uppercase">Online</span></td>
+                        <td class="p-6 text-right"><button onclick="db.ref('staff/${c.key}').remove()" class="text-rose-500 italic text-[10px]">Xóa</button></td>
+                    </tr>`;
                 });
-                lucide.createIcons();
             });
         }
 
-        // TỰ ĐỘNG CẬP NHẬT THỜI GIAN
+        // --- 7. KHO & VẬN HÀNH ---
+        function addInventoryItem() {
+            const name = document.getElementById('ops-s-name').value;
+            const qty = parseInt(document.getElementById('ops-s-qty').value);
+            if(name && qty) {
+                db.ref('inventory/' + name).set(qty);
+                alert("Đã cập nhật kho!");
+            }
+        }
+
+        function renderInventory() {
+            db.ref('inventory').on('value', snap => {
+                const list = document.getElementById('inventory-list');
+                list.innerHTML = '';
+                snap.forEach(c => {
+                    list.innerHTML += `<tr class="border-t border-slate-800">
+                        <td class="p-6 font-bold text-slate-300">${c.key}</td>
+                        <td class="p-6 text-center text-amber-500 font-black">${c.val().toLocaleString()}</td>
+                        <td class="p-6 text-slate-500 text-xs">gram/ml</td>
+                        <td class="p-6"><span class="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[8px] font-black uppercase tracking-tighter">An toàn</span></td>
+                    </tr>`;
+                });
+            });
+        }
+
+        function addMenuProduct() {
+            const name = document.getElementById('ops-p-name').value;
+            const price = parseInt(document.getElementById('ops-p-price').value);
+            const cate = document.getElementById('ops-p-cate').value;
+            if(name && price) {
+                db.ref('products').push({ name, price, cate });
+                alert("Đã thêm món vào POS!");
+            }
+        }
+
+        function renderOps() {
+            db.ref('products').on('value', snap => {
+                const pre = document.getElementById('ops-menu-preview');
+                pre.innerHTML = '';
+                snap.forEach(c => {
+                    pre.innerHTML += `<div class="p-3 glass rounded-xl flex justify-between text-[10px] items-center uppercase font-black">
+                        <span>${c.val().name}</span>
+                        <button onclick="db.ref('products/${c.key}').remove()" class="text-rose-500">Gỡ</button>
+                    </div>`;
+                });
+            });
+        }
+
+        // TỰ ĐỘNG CẬP NHẬT HUB CLOCK
         setInterval(() => {
             const now = new Date();
-            document.getElementById('time-now').innerText = now.toLocaleTimeString();
-            document.getElementById('date-now').innerText = now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' });
+            document.getElementById('hub-time').innerText = now.toLocaleTimeString();
+            document.getElementById('hub-date').innerText = now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' });
         }, 1000);
         lucide.createIcons();
     </script>
